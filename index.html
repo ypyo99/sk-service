@@ -2224,7 +2224,6 @@
             </div>
 
             <div class="photo-item-summary">
-                <span class="pis-badge" id="photoItemCode">코드</span>
                 <div class="pis-title" id="photoItemText">항목 내용</div>
             </div>
 
@@ -3499,7 +3498,7 @@ function doGet(e) {
             if (!item) return;
 
             document.getElementById('photoModalCat').textContent = `${item.code}. ${item.category}`;
-            document.getElementById('photoItemCode').textContent = `${item.code}번 작업`;
+            // 1번 작업 배지 삭제됨
             document.getElementById('photoItemText').textContent = item.text;
 
             updateDriveBannerStatus();
