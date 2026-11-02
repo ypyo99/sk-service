@@ -1744,6 +1744,28 @@
             font-weight: 600;
         }
 
+        .quote-loading-box {
+            padding: 14px;
+            background: #ffffff;
+            border: 1.5px dashed var(--accent);
+            border-radius: 12px;
+            font-size: 12.5px;
+            color: var(--accent);
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .quote-no-key-box {
+            padding: 14px 12px;
+            background: #ffffff;
+            border: 1.5px dashed var(--line);
+            border-radius: 12px;
+            text-align: center;
+        }
+
         .first-sunday-confirm-btn {
             width: 100%;
             height: 48px;
@@ -2556,10 +2578,26 @@
                         <div class="first-sunday-item-title">성가대 덕담</div>
                         <div class="first-sunday-item-desc">찬양으로 헌신하는 성가대원들에게 따뜻한 격려 한마디</div>
                         <div class="first-sunday-quote-header">
-                            <span class="first-sunday-theme" id="quoteThemeText"><i class="ph-bold ph-sparkle"></i> 이달의 추천 덕담</span>
-                            <button type="button" class="quote-shuffle-btn" onclick="shuffleChoirQuote()" title="다른 덕담 추천 보기"><i class="ph-bold ph-arrows-clockwise"></i>다른 덕담</button>
+                            <span class="first-sunday-theme" id="quoteThemeText"><i class="ph-bold ph-sparkle"></i> AI 추천 덕담</span>
+                            <div style="display:flex; gap:6px;">
+                                <button type="button" class="quote-shuffle-btn" onclick="generateChoirQuotesAI(true)" id="quoteRegenBtn" title="새로운 AI 덕담 생성"><i class="ph-bold ph-sparkle"></i>새로 생성</button>
+                                <button type="button" class="quote-shuffle-btn" onclick="openGeminiApiKeyModal()" title="Gemini API 키 설정"><i class="ph-bold ph-gear"></i>설정</button>
+                            </div>
                         </div>
-                        <div class="first-sunday-quotes">
+
+                        <!-- 로딩 상태 -->
+                        <div id="quoteLoadingBox" class="quote-loading-box hidden">
+                            <i class="ph-bold ph-spinner-gap spin"></i> Gemini AI가 덕담을 생성하고 있습니다...
+                        </div>
+
+                        <!-- API 키 미등록 안내 -->
+                        <div id="quoteNoKeyBox" class="quote-no-key-box hidden">
+                            <div style="font-size:12.5px; color:var(--muted); margin-bottom:8px; line-height:1.4;">Gemini API 키를 등록하면 AI가 매월 첫 주에 어울리는 새로운 덕담을 실시간으로 생성합니다.</div>
+                            <button type="button" class="pill-btn" onclick="openGeminiApiKeyModal()" style="font-size:12px; padding:6px 12px; display:inline-flex;"><i class="ph-bold ph-key"></i>Gemini API 키 입력하기</button>
+                        </div>
+
+                        <!-- 생성된 덕담 표시 -->
+                        <div class="first-sunday-quotes" id="quoteQuotesContainer">
                             <div class="quote-row" onclick="copyQuote('quoteTextService1')" title="터치하여 문구 복사">
                                 <span class="quote-tag">1부</span>
                                 <span class="quote-text" id="quoteTextService1">"이른 아침 귀한 찬양으로 예배를 열어주셔서 감사합니다!"</span>
@@ -2577,6 +2615,22 @@
                 <button class="first-sunday-confirm-btn" onclick="confirmFirstSundayModal()">
                     <i class="ph-bold ph-check"></i>확인했습니다
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gemini API Key 설정 모달 -->
+    <div id="geminiKeyModal" class="backdrop center hidden" onclick="if (event.target === this) closeGeminiApiKeyModal()">
+        <div class="dialog" style="max-width:360px;">
+            <div class="big-icon" style="background:#eef2ff; color:var(--accent);"><i class="ph-bold ph-sparkle"></i></div>
+            <h3 style="font-size:19px;">Gemini AI 덕담 설정</h3>
+            <p style="font-size:13.5px; color:var(--muted); margin-top:6px; line-height:1.45;">실시간 덕담 생성을 위한 Gemini API Key를 입력해 주세요.<br><span style="font-size:12px; color:var(--muted);">(Google AI Studio에서 무료 발급 가능)</span></p>
+            <div style="margin:16px 0; text-align:left;">
+                <input type="password" id="geminiApiKeyInput" class="input-text" placeholder="AIzaSy... API 키 붙여넣기" style="width:100%; box-sizing:border-box;" />
+            </div>
+            <div class="btn-row">
+                <button class="big-btn ghost" onclick="closeGeminiApiKeyModal()">취소</button>
+                <button class="big-btn primary" onclick="saveGeminiApiKey()"><i class="ph-bold ph-check"></i>저장하기</button>
             </div>
         </div>
     </div>
@@ -4487,116 +4541,147 @@ function deleteDrivePhoto(fileId, fileName) {
             showToast(ok ? 'Apps Script 코드가 복사되었습니다!' : '복사에 실패했습니다.', ok ? 'ph-copy' : 'ph-warning-circle');
         }
 
-        // === 매월 첫번째 일요일 알림 & 계절별/월별 성가대 덕담 ===
-        const MONTHLY_CHOIR_QUOTES = {
-            1: {
-                theme: '새해와 시작',
-                s1: '새해 첫 달, 이른 아침을 깨우는 귀한 찬양으로 예배를 열어주셔서 감사합니다!',
-                s2: '새해 온 성도에게 큰 소망과 은혜를 전하는 웅장한 찬양에 감사드립니다!'
-            },
-            2: {
-                theme: '새봄의 기대',
-                s1: '추운 아침에도 변함없는 열정으로 찬양해 주셔서 큰 힘이 됩니다!',
-                s2: '하나 된 목소리로 본당을 가득 채운 찬양에 깊은 은혜를 받았습니다!'
-            },
-            3: {
-                theme: '봄과 사순절의 은혜',
-                s1: '따뜻한 봄기운처럼 예배의 문을 활짝 열어주는 은혜로운 찬양 감사합니다!',
-                s2: '마음을 차분히 적시는 깊은 찬양으로 예배에 큰 감동을 주셨습니다!'
-            },
-            4: {
-                theme: '부활과 생명',
-                s1: '부활의 기쁨을 담은 활기찬 찬양으로 주일 아침을 열어주셔서 감사합니다!',
-                s2: '생명과 소망이 넘치는 감격스러운 찬양으로 온 성도에게 큰 은혜가 되었습니다!'
-            },
-            5: {
-                theme: '가정과 사랑',
-                s1: '온 성도에게 따뜻한 사랑과 평안을 전하는 아침 찬양에 감사드립니다!',
-                s2: '가족 같은 따스함과 은혜가 넘치는 풍성한 찬양에 깊이 감사드립니다!'
-            },
-            6: {
-                theme: '성령과 활력',
-                s1: '싱그러운 초여름 아침, 영혼을 맑게 깨우는 은혜의 찬양 감사합니다!',
-                s2: '성령의 감동이 가득한 화음으로 예배에 큰 활력을 불어넣어 주셨습니다!'
-            },
-            7: {
-                theme: '맥추감사와 여름',
-                s1: '무더위도 잊게 하는 시원하고 정성 어린 아침 찬양에 감사드립니다!',
-                s2: '감사의 계절에 온 본당을 은혜로 가득 채워주신 찬양에 감사드립니다!'
-            },
-            8: {
-                theme: '쉼과 재충전',
-                s1: '지치기 쉬운 여름날, 영혼을 깨우는 힘찬 찬양으로 큰 힘을 얻습니다!',
-                s2: '더위를 잊게 하는 열정적이고 감동적인 찬양으로 큰 은혜 받았습니다!'
-            },
-            9: {
-                theme: '결실과 가을',
-                s1: '선선한 가을 아침, 맑고 고운 목소리로 예배를 열어주셔서 감사합니다!',
-                s2: '풍성한 결실의 계절처럼 감동이 넘쳐나는 아름다운 찬양에 감사드립니다!'
-            },
-            10: {
-                theme: '믿음과 성숙',
-                s1: '깊어가는 가을, 주님을 향한 깊은 헌신이 담긴 아침 찬양에 감사드립니다!',
-                s2: '영혼을 울리는 웅장하고 진실한 찬양으로 예배에 큰 은혜가 되었습니다!'
-            },
-            11: {
-                theme: '추수감사의 달',
-                s1: '감사가 넘치는 11월, 예배의 첫 자리를 찬양으로 밝혀주셔서 감사합니다!',
-                s2: '온 성도의 감사를 하나로 묶어 하늘로 올리는 최고의 찬양이었습니다!'
-            },
-            12: {
-                theme: '성탄과 결산',
-                s1: '기쁜 성탄의 계절, 이른 아침을 은혜의 찬양으로 밝혀주셔서 감사합니다!',
-                s2: '한 해를 아름답게 마무리하는 감격과 소망의 찬양에 깊이 감사드립니다!'
-            }
-        };
+        // === 매월 첫번째 일요일 알림 & Gemini AI 실시간 덕담 생성 ===
+        const GEMINI_API_KEY_STORAGE = 'GEMINI_API_KEY';
+        const DEFAULT_GEMINI_API_KEY = ''; // 필요 시 기본 키를 설정 가능
 
-        const GENERAL_CHOIR_QUOTES = [
-            {
-                theme: '감사와 찬양',
-                s1: '이른 아침 주님을 찬양하는 아름다운 모습에 큰 도전을 받습니다!',
-                s2: '마음을 울리는 거룩한 화음으로 하나님께 최고의 찬양을 올려주셨습니다!'
-            },
-            {
-                theme: '헌신과 기쁨',
-                s1: '보이지 않는 곳에서 새벽부터 흘린 땀방울이 큰 은혜의 열매를 맺었습니다!',
-                s2: '정성 다해 준비된 찬양이 오늘 온 성도의 마음을 활짝 열어주었습니다!'
-            },
-            {
-                theme: '축복과 평안',
-                s1: '아침을 깨우는 성가대의 기쁨 찬양이 오늘 우리 모두의 기쁨입니다!',
-                s2: '천상의 하모니처럼 평안과 은혜를 선물해 주신 찬양에 감사드립니다!'
-            }
-        ];
-
-        let currentQuoteIndex = 0;
-
-        function updateFirstSundayQuotes(month) {
-            const m = month || (new Date().getMonth() + 1);
-            const quote = MONTHLY_CHOIR_QUOTES[m] || MONTHLY_CHOIR_QUOTES[11];
-            const themeEl = document.getElementById('quoteThemeText');
-            const s1El = document.getElementById('quoteTextService1');
-            const s2El = document.getElementById('quoteTextService2');
-
-            if (themeEl) themeEl.innerHTML = `<i class="ph-bold ph-sparkle"></i> ${m}월 테마: ${quote.theme}`;
-            if (s1El) s1El.textContent = `"${quote.s1}"`;
-            if (s2El) s2El.textContent = `"${quote.s2}"`;
+        function getGeminiApiKey() {
+            return (DEFAULT_GEMINI_API_KEY || localStorage.getItem(GEMINI_API_KEY_STORAGE) || '').trim();
         }
 
-        function shuffleChoirQuote() {
-            triggerHaptic(10);
-            const nowMonth = new Date().getMonth() + 1;
-            const pool = [MONTHLY_CHOIR_QUOTES[nowMonth], ...GENERAL_CHOIR_QUOTES].filter(Boolean);
-            currentQuoteIndex = (currentQuoteIndex + 1) % pool.length;
-            const quote = pool[currentQuoteIndex];
+        function openGeminiApiKeyModal() {
+            const input = document.getElementById('geminiApiKeyInput');
+            if (input) input.value = getGeminiApiKey();
+            openSheet('geminiKeyModal');
+        }
+
+        function closeGeminiApiKeyModal() {
+            closeSheet('geminiKeyModal');
+        }
+
+        function saveGeminiApiKey() {
+            const val = (document.getElementById('geminiApiKeyInput').value || '').trim();
+            if (!val) {
+                showToast('API 키를 입력해 주세요.', 'ph-warning');
+                return;
+            }
+            localStorage.setItem(GEMINI_API_KEY_STORAGE, val);
+            closeGeminiApiKeyModal();
+            showToast('Gemini API 키가 저장되었습니다!', 'ph-check-circle');
+            generateChoirQuotesAI(true);
+        }
+
+        // Gemini AI를 통한 실시간 맞춤 덕담 생성
+        async function generateChoirQuotesAI(forceRefresh = false) {
+            const apiKey = getGeminiApiKey();
+            const loadingBox = document.getElementById('quoteLoadingBox');
+            const noKeyBox = document.getElementById('quoteNoKeyBox');
+            const quotesContainer = document.getElementById('quoteQuotesContainer');
             const themeEl = document.getElementById('quoteThemeText');
             const s1El = document.getElementById('quoteTextService1');
             const s2El = document.getElementById('quoteTextService2');
+            const regenBtn = document.getElementById('quoteRegenBtn');
 
-            if (themeEl) themeEl.innerHTML = `<i class="ph-bold ph-sparkle"></i> 추천 테마: ${quote.theme}`;
-            if (s1El) s1El.textContent = `"${quote.s1}"`;
-            if (s2El) s2El.textContent = `"${quote.s2}"`;
-            showToast('새로운 추천 덕담으로 변경되었습니다.', 'ph-arrows-clockwise');
+            if (!apiKey) {
+                if (loadingBox) loadingBox.classList.add('hidden');
+                if (quotesContainer) quotesContainer.classList.add('hidden');
+                if (noKeyBox) noKeyBox.classList.remove('hidden');
+                if (themeEl) themeEl.innerHTML = '<i class="ph-bold ph-sparkle"></i> AI 덕담 생성 대기';
+                return;
+            }
+
+            if (noKeyBox) noKeyBox.classList.add('hidden');
+
+            const now = new Date();
+            const todayKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+            const cacheKey = 'gemini_choir_quote_' + todayKey;
+
+            // 이미 오늘 생성된 덕담이 있고 강제 새로고침이 아닌 경우 캐시 표시
+            if (!forceRefresh) {
+                try {
+                    const cached = JSON.parse(sessionStorage.getItem(cacheKey) || localStorage.getItem(cacheKey));
+                    if (cached && cached.service1 && cached.service2) {
+                        if (themeEl) themeEl.innerHTML = `<i class="ph-bold ph-sparkle"></i> ${cached.theme || (now.getMonth() + 1) + '월 AI 추천 덕담'}`;
+                        if (s1El) s1El.textContent = `"${cached.service1}"`;
+                        if (s2El) s2El.textContent = `"${cached.service2}"`;
+                        if (quotesContainer) quotesContainer.classList.remove('hidden');
+                        if (loadingBox) loadingBox.classList.add('hidden');
+                        return;
+                    }
+                } catch (e) {}
+            }
+
+            // 로딩 상태 시작
+            if (loadingBox) loadingBox.classList.remove('hidden');
+            if (quotesContainer) quotesContainer.classList.add('hidden');
+            if (regenBtn) regenBtn.disabled = true;
+
+            const month = now.getMonth() + 1;
+            const prompt = `오늘 날짜는 ${now.getFullYear()}년 ${month}월입니다. 교회 예배부 사역자가 매월 첫 주일 성가대원들에게 건넬 아주 짧고 은혜로운 1줄 덕담(격려 문구)을 작성해 주세요.
+- 대상: 성광교회 1부, 2부 성가대원
+- 1부 성가대: 이른 아침/새벽 찬양으로 예배를 열어준 헌신에 감사 (30자 내외의 아주 짧은 정중한 한 문장)
+- 2부 성가대: 온 성도와 함께 본당을 가득 채우는 풍성한 찬양에 감사 (30자 내외의 아주 짧은 정중한 한 문장)
+- 해당 월(${month}월)의 계절감이나 절기(새해, 부활, 맥추, 추수감사, 성탄 등)를 자연스럽게 담아주세요.
+반드시 아래 JSON 형식으로만 응답해 주세요:
+{
+  "theme": "${month}월 테마 (예: 11월 감사의 달)",
+  "service1": "1부 덕담 문구",
+  "service2": "2부 덕담 문구"
+}`;
+
+            const models = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash'];
+            let resultData = null;
+
+            for (const model of models) {
+                try {
+                    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+                    const res = await fetch(endpoint, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [{ parts: [{ text: prompt }] }],
+                            generationConfig: {
+                                responseMimeType: 'application/json',
+                                temperature: 0.8
+                            }
+                        })
+                    });
+
+                    if (!res.ok) continue;
+                    const data = await res.json();
+                    const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+                    if (rawText) {
+                        resultData = JSON.parse(rawText.replace(/```json|```/g, '').trim());
+                        if (resultData && resultData.service1 && resultData.service2) {
+                            break;
+                        }
+                    }
+                } catch (err) {
+                    console.warn(`Model ${model} failed, trying next:`, err);
+                }
+            }
+
+            if (loadingBox) loadingBox.classList.add('hidden');
+            if (regenBtn) regenBtn.disabled = false;
+
+            if (resultData && resultData.service1 && resultData.service2) {
+                if (themeEl) themeEl.innerHTML = `<i class="ph-bold ph-sparkle"></i> ${resultData.theme || month + '월 AI 추천 덕담'}`;
+                if (s1El) s1El.textContent = `"${resultData.service1.replace(/^"|"$/g, '').trim()}"`;
+                if (s2El) s2El.textContent = `"${resultData.service2.replace(/^"|"$/g, '').trim()}"`;
+                if (quotesContainer) quotesContainer.classList.remove('hidden');
+
+                try {
+                    localStorage.setItem(cacheKey, JSON.stringify(resultData));
+                    sessionStorage.setItem(cacheKey, JSON.stringify(resultData));
+                } catch (e) {}
+
+                if (forceRefresh) {
+                    showToast('새로운 AI 맞춤 덕담이 생성되었습니다! ✨', 'ph-sparkle');
+                }
+            } else {
+                showToast('AI 덕담 생성에 실패했습니다. API 키를 확인해 주세요.', 'ph-warning-circle');
+                if (quotesContainer) quotesContainer.classList.remove('hidden');
+            }
         }
 
         function copyQuote(elemId) {
@@ -4651,8 +4736,8 @@ function deleteDrivePhoto(fileId, fileName) {
             if (titleEl) titleEl.textContent = `${month}월 첫번째 주일 체크사항`;
             if (badgeEl) badgeEl.textContent = `${month}월 첫째 주일 알림`;
 
-            // 계절별/월별 성가대 덕담 자동 반영
-            updateFirstSundayQuotes(month);
+            // 실시간 AI 덕담 생성 실행
+            generateChoirQuotesAI(false);
 
             openSheet('firstSundayModal');
         }
@@ -4751,6 +4836,7 @@ function deleteDrivePhoto(fileId, fileName) {
             }
             if (e.key !== 'Escape') return;
             if (!document.getElementById('photoViewerModal').classList.contains('hidden')) closePhotoViewer();
+            else if (!document.getElementById('geminiKeyModal').classList.contains('hidden')) closeGeminiApiKeyModal();
             else if (!document.getElementById('firstSundayModal').classList.contains('hidden')) closeFirstSundayModal();
             else if (!document.getElementById('photoModal').classList.contains('hidden')) closePhotoModal();
             else if (!document.getElementById('driveConfigModal').classList.contains('hidden')) closeDriveConfigModal();
