@@ -3344,7 +3344,8 @@ function doGet(e) {
                     subFolder: '사진',
                     base64: photoRecord.dataUrl,
                     mimeType: 'image/jpeg',
-                    fileName: photoRecord.fileName
+                    fileName: photoRecord.fileName,
+                    itemId: photoRecord.itemId
                 };
 
                 const res = await fetch(webhookUrl, {
@@ -3459,7 +3460,7 @@ function doGet(e) {
                 return `
                     <div class="photo-card">
                         <div class="photo-card-img-wrap" onclick="openPhotoViewer('${p.id}')">
-                            <img class="photo-card-img" src="${p.dataUrl}" alt="첨부 사진" />
+                            <img class="photo-card-img" src="${p.dataUrl || p.thumbUrl || p.driveViewUrl}" alt="첨부 사진" />
                         </div>
                         <div class="photo-card-body">
                             <span class="photo-card-time">${timeStr}</span>
@@ -3571,7 +3572,7 @@ function doGet(e) {
             const p = photos.find(item => item.id === photoId);
             if (!p) return;
 
-            document.getElementById('viewerImage').src = p.dataUrl;
+            document.getElementById('viewerImage').src = p.dataUrl || p.driveViewUrl || p.thumbUrl;
             document.getElementById('viewerTitle').textContent = p.fileName || '사진 보기';
 
             const driveBtn = document.getElementById('viewerDriveBtn');
@@ -3675,6 +3676,7 @@ function doGet(e) {
             icon.className = 'ph-bold ph-spinner-gap spin';
             showToast('구글 시트에서 최신 목록을 불러오는 중...', 'ph-cloud-arrow-down');
             const ok = await loadSheetData(true);
+            await syncPhotosFromDrive();
             wasComplete = isServiceComplete();
             btn.disabled = false;
             icon.className = 'ph-bold ph-cloud-arrow-down';
@@ -3717,7 +3719,10 @@ function doGet(e) {
             await refreshPhotoCache();
             updateDriveBannerStatus();
             renderHeaderAndTabs();
-            loadSheetData().then(() => { wasComplete = isServiceComplete(); });
+            loadSheetData().then(() => {
+                wasComplete = isServiceComplete();
+                syncPhotosFromDrive();
+            });
         };
     </script>
 </body>
