@@ -3774,19 +3774,39 @@ function doGet(e) {
         function openResetModal() {
             const name = SERVICE_NAMES[appState.currentService];
             document.getElementById('resetModalTitle').textContent = `${name} 초기화`;
-            document.getElementById('resetModalDesc').textContent = `${name}의 체크 표시를 모두 해제할까요?`;
+            document.getElementById('resetModalDesc').textContent = `${name}의 체크 표시와 출석 인원을 모두 초기화할까요?`;
             openSheet('resetModal');
         }
 
         function closeResetModal() { closeSheet('resetModal'); }
 
         function confirmResetService() {
-            appState.checkedByService[appState.currentService] = {};
+            const curSrv = appState.currentService;
+            const name = SERVICE_NAMES[curSrv];
+
+            // 1. 체크 표시 초기화
+            appState.checkedByService[curSrv] = {};
             wasComplete = false;
+
+            // 2. 해당 예배 출석 인원(남자, 여자, 인터넷) 0으로 초기화
+            const srvToAtt = {
+                service1: 'att1',
+                service2: 'att2',
+                afternoon: 'att3',
+                dawn: 'attDawn'
+            };
+            const attKey = srvToAtt[curSrv];
+            if (attKey && appState.attendance) {
+                appState.attendance[attKey] = { male: 0, female: 0, broadcast: 0 };
+            }
+
             saveState();
             closeResetModal();
             renderAll();
-            showToast(`${SERVICE_NAMES[appState.currentService]} 항목이 초기화되었습니다.`, 'ph-arrow-counter-clockwise');
+            if (typeof renderAttendanceModal === 'function') {
+                renderAttendanceModal();
+            }
+            showToast(`${name} 체크 및 출석 인원이 초기화되었습니다.`, 'ph-arrow-counter-clockwise');
         }
 
         // 체크 기록은 그대로 두고 구글 시트의 최신 목록만 다시 불러옴
