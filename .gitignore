@@ -1,0 +1,7 @@
+# Backup files
+*.backup*.html
+
+# IDE / System
+.claude/
+.DS_Store
+Thumbs.db

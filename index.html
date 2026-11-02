@@ -1,0 +1,3704 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#1e1b4b">
+    <title>성광교회 예배부 체크리스트</title>
+    <!-- Pretendard Font -->
+    <link rel="stylesheet" as="style" crossorigin
+        href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web@2.1.1"></script>
+    <style>
+        :root {
+            --bg: #f5f3ef;
+            --surface: #ffffff;
+            --surface-2: #f8f7f4;
+            --ink: #1c1917;
+            --ink-2: #44403c;
+            --muted: #8a837c;
+            --line: #e9e5df;
+            --accent: #4f46e5;
+            --accent-soft: #eef2ff;
+            --gold: #fbbf24;
+            --ok: #10b981;
+            --ok-soft: #d1fae5;
+            --danger: #e11d48;
+            --danger-soft: #ffe4e6;
+            --warn-soft: #fef3c7;
+            --warn-ink: #92400e;
+            --hero-1: #1e1b4b;
+            --hero-2: #312e81;
+            --shadow-sm: 0 1px 2px rgba(28, 25, 23, .06), 0 1px 3px rgba(28, 25, 23, .05);
+            --shadow-md: 0 6px 20px -6px rgba(28, 25, 23, .18);
+            --shadow-lg: 0 20px 50px -12px rgba(28, 25, 23, .35);
+            --radius: 18px;
+            --safe-b: env(safe-area-inset-bottom, 0px);
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg: #0f0e17;
+                --surface: #1a1926;
+                --surface-2: #22212f;
+                --ink: #f5f5f4;
+                --ink-2: #d6d3d1;
+                --muted: #8f8b9c;
+                --line: #2e2c3d;
+                --accent: #818cf8;
+                --accent-soft: #25234a;
+                --ok-soft: #063d2e;
+                --danger-soft: #45101f;
+                --warn-soft: #3d2a06;
+                --warn-ink: #fcd34d;
+                --hero-1: #13112e;
+                --hero-2: #26236b;
+                --shadow-sm: 0 1px 2px rgba(0, 0, 0, .4);
+                --shadow-md: 0 6px 20px -6px rgba(0, 0, 0, .6);
+                --shadow-lg: 0 20px 50px -12px rgba(0, 0, 0, .8);
+            }
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            -webkit-text-size-adjust: 100%;
+        }
+
+        body {
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--ink);
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+            min-height: 100vh;
+            padding-bottom: calc(110px + var(--safe-b));
+            word-break: keep-all;
+        }
+
+        button {
+            font: inherit;
+            color: inherit;
+            background: none;
+            border: 0;
+            cursor: pointer;
+        }
+
+        input {
+            font: inherit;
+            color: inherit;
+        }
+
+        .wrap {
+            max-width: 640px;
+            margin: 0 auto;
+            padding: 0 16px;
+        }
+
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* ===== Hero header ===== */
+        .hero {
+            background: radial-gradient(120% 140% at 100% 0%, var(--hero-2) 0%, var(--hero-1) 60%);
+            color: #fff;
+            padding: 18px 0 20px;
+            border-radius: 0 0 28px 28px;
+        }
+
+        .hero-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .hero-date {
+            font-size: 14.5px;
+            font-weight: 700;
+            color: rgba(255, 255, 255, .8);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .hero-date i {
+            font-size: 16px;
+        }
+
+        .hero-title-row { display: flex; align-items: center; gap: 8px; margin-top: 3px; }
+        .hero h1 {
+            font-size: clamp(17px, 4.5vw, 22px);
+            font-weight: 800;
+            letter-spacing: -.03em;
+            margin-top: 3px;
+            white-space: nowrap;
+        }
+        @media (max-width: 440px) {
+            .hero-top { gap: 8px; }
+            .hero h1 { font-size: 17.5px; }
+            .hero-date { font-size: 13.5px; }
+            .hero-actions { gap: 6px; }
+            .act .icon-btn { width: 44px; height: 44px; font-size: 23px; }
+            .act .act-label { font-size: 10.5px; }
+        }
+        @media (max-width: 370px) {
+            .hero h1 { font-size: 16px; }
+            .act .icon-btn { width: 40px; height: 40px; font-size: 20px; }
+        }
+        .hero-drive-btn {
+            width: 34px; height: 34px; border-radius: 11px;
+            display: inline-grid; place-items: center;
+            background: rgba(255, 255, 255, .12); border: 1.5px solid rgba(255, 255, 255, .2);
+            color: rgba(255, 255, 255, .8); font-size: 19px;
+            cursor: pointer; transition: all .15s ease; flex-shrink: 0;
+        }
+        .hero-drive-btn:active { transform: scale(.92); background: rgba(255, 255, 255, .25); }
+        .hero-drive-btn:hover { color: #fff; border-color: rgba(255, 255, 255, .4); }
+
+        .icon-btn {
+            width: 42px;
+            height: 42px;
+            border-radius: 14px;
+            display: grid;
+            place-items: center;
+            background: rgba(255, 255, 255, .1);
+            color: #fff;
+            font-size: 20px;
+            border: 1px solid rgba(255, 255, 255, .14);
+            transition: background .15s;
+        }
+
+        .icon-btn:active {
+            background: rgba(255, 255, 255, .22);
+        }
+
+        .hero-actions {
+            display: flex;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .act {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .act .icon-btn {
+            width: 48px;
+            height: 48px;
+            font-size: 26px;
+        }
+
+        .act .act-label {
+            font-size: 11.5px;
+            font-weight: 700;
+            color: rgba(255, 255, 255, .75);
+        }
+
+        .act.danger .icon-btn {
+            background: var(--danger);
+            border-color: #fb7185;
+            box-shadow: 0 6px 16px -6px rgba(225, 29, 72, .7);
+        }
+
+        .act.danger:active .icon-btn {
+            background: #be123c;
+        }
+
+        .act:disabled {
+            opacity: .6;
+        }
+
+        .seg {
+            margin-top: 16px;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 4px;
+            background: rgba(0, 0, 0, .25);
+            padding: 4px;
+            border-radius: 16px;
+        }
+
+        .seg button {
+            padding: 10px 4px;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 700;
+            color: rgba(255, 255, 255, .7);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            transition: all .18s;
+        }
+
+        .seg button i {
+            font-size: 18px;
+        }
+
+        .seg button.active {
+            background: var(--gold);
+            color: #1c1917;
+            font-weight: 800;
+            box-shadow: 0 4px 14px -4px rgba(251, 191, 36, .6);
+        }
+
+        .progress-card {
+            margin-top: 14px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            background: rgba(255, 255, 255, .08);
+            border: 1px solid rgba(255, 255, 255, .12);
+            border-radius: var(--radius);
+            padding: 12px 14px;
+        }
+
+        .ring {
+            position: relative;
+            width: 64px;
+            height: 64px;
+            flex-shrink: 0;
+        }
+
+        .ring svg {
+            width: 100%;
+            height: 100%;
+            transform: rotate(-90deg);
+        }
+
+        .ring circle {
+            fill: none;
+            stroke-width: 7;
+        }
+
+        .ring .ring-bg {
+            stroke: rgba(255, 255, 255, .14);
+        }
+
+        .ring .ring-fg {
+            stroke: var(--gold);
+            stroke-linecap: round;
+            transition: stroke-dashoffset .5s cubic-bezier(.4, 0, .2, 1), stroke .3s;
+        }
+
+        .ring.complete .ring-fg {
+            stroke: #34d399;
+        }
+
+        .ring-text {
+            position: absolute;
+            inset: 0;
+            display: grid;
+            place-items: center;
+            font-size: 16px;
+            font-weight: 900;
+        }
+
+        .pc-body {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .pc-title {
+            font-size: 17px;
+            font-weight: 800;
+        }
+
+        .pc-sub {
+            font-size: 13px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, .7);
+            margin-top: 2px;
+        }
+
+        .pc-sub b {
+            color: var(--gold);
+            font-weight: 800;
+        }
+
+        .switch {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            flex-shrink: 0;
+        }
+
+        .switch-track {
+            width: 46px;
+            height: 28px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, .2);
+            position: relative;
+            transition: background .2s;
+        }
+
+        .switch-track::after {
+            content: '';
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: #fff;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, .3);
+            transition: transform .2s;
+        }
+
+        .switch.on .switch-track {
+            background: var(--gold);
+        }
+
+        .switch.on .switch-track::after {
+            transform: translateX(18px);
+        }
+
+        .switch-label {
+            font-size: 11px;
+            font-weight: 700;
+            color: rgba(255, 255, 255, .75);
+        }
+
+        /* ===== Sticky category progress tiles ===== */
+        .chipbar {
+            position: sticky;
+            top: 0;
+            z-index: 20;
+            background: color-mix(in srgb, var(--bg) 88%, transparent);
+            backdrop-filter: saturate(1.6) blur(14px);
+            -webkit-backdrop-filter: saturate(1.6) blur(14px);
+        }
+
+        .tiles {
+            display: grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 6px;
+            padding: 10px 12px;
+        }
+
+        @media (min-width: 560px) {
+            .tiles {
+                grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+                padding: 12px 16px;
+            }
+        }
+
+        .tile {
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            padding: 7px 7px 8px;
+            border-radius: 14px;
+            text-align: left;
+            background: var(--surface);
+            border: 1.5px solid var(--line);
+            box-shadow: var(--shadow-sm);
+            transition: background .15s, border-color .15s, transform .1s;
+        }
+
+        .tile:active {
+            transform: scale(.96);
+        }
+
+        .tile-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 2px;
+        }
+
+        .tile-code {
+            font-size: 12px;
+            font-weight: 900;
+            color: var(--c);
+            line-height: 1;
+        }
+
+        .tile-cnt {
+            font-size: 11px;
+            font-weight: 800;
+            color: var(--muted);
+            font-variant-numeric: tabular-nums;
+            line-height: 1;
+        }
+
+        .tile-cnt b {
+            color: var(--ink);
+        }
+
+        .tile-name {
+            font-size: 12.5px;
+            font-weight: 800;
+            color: var(--ink);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .tile-bar {
+            height: 4px;
+            border-radius: 999px;
+            background: var(--surface-2);
+            overflow: hidden;
+        }
+
+        .tile-bar i {
+            display: block;
+            height: 100%;
+            border-radius: 999px;
+            background: var(--c);
+            transition: width .35s;
+        }
+
+        .tile.done {
+            background: color-mix(in srgb, var(--ok-soft) 70%, var(--surface));
+            border-color: color-mix(in srgb, var(--ok) 40%, transparent);
+        }
+
+        .tile.done .tile-cnt {
+            color: var(--ok);
+        }
+
+        .tile.done .tile-bar i {
+            background: var(--ok);
+        }
+
+        .tile.active {
+            background: var(--ink);
+            border-color: var(--ink);
+            box-shadow: var(--shadow-md);
+        }
+
+        .tile.active .tile-name {
+            color: var(--bg);
+        }
+
+        .tile.active .tile-cnt {
+            color: color-mix(in srgb, var(--bg) 70%, transparent);
+        }
+
+        .tile.active .tile-cnt b {
+            color: var(--gold);
+        }
+
+        .tile.active .tile-bar {
+            background: color-mix(in srgb, var(--bg) 22%, transparent);
+        }
+
+        .thin-progress {
+            height: 3px;
+            background: var(--line);
+        }
+
+        .thin-progress>div {
+            height: 100%;
+            background: linear-gradient(90deg, var(--gold), var(--ok));
+            transition: width .4s;
+        }
+
+        /* ===== Search ===== */
+        .search {
+            position: relative;
+            margin: 14px 0 16px;
+        }
+
+        .search>i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 19px;
+            color: var(--muted);
+        }
+
+        .search input {
+            width: 100%;
+            padding: 13px 44px 13px 44px;
+            border-radius: 16px;
+            border: 1.5px solid var(--line);
+            background: var(--surface);
+            font-size: 16px;
+            font-weight: 600;
+            box-shadow: var(--shadow-sm);
+            outline: none;
+            transition: border-color .15s, box-shadow .15s;
+            user-select: text;
+        }
+
+        .search input::placeholder {
+            color: var(--muted);
+            font-weight: 500;
+        }
+
+        .search input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px var(--accent-soft);
+        }
+
+        .search .clear {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+            background: var(--surface-2);
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        /* ===== Groups ===== */
+        #checklistContainer {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .group {
+            background: var(--surface);
+            border-radius: 22px;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--line);
+            overflow: hidden;
+        }
+
+        .group-head {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 14px 12px 14px 14px;
+        }
+
+        .gh-main {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-align: left;
+        }
+
+        .gh-code {
+            width: 38px;
+            height: 38px;
+            border-radius: 12px;
+            flex-shrink: 0;
+            display: grid;
+            place-items: center;
+            background: color-mix(in srgb, var(--c) 14%, transparent);
+            color: var(--c);
+            font-size: 15px;
+            font-weight: 900;
+        }
+
+        .group.all-done .gh-code {
+            background: var(--ok);
+            color: #fff;
+        }
+
+        .gh-text {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .gh-name {
+            font-size: 18px;
+            font-weight: 800;
+            letter-spacing: -.01em;
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+        }
+
+        .gh-name small {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--muted);
+        }
+
+        .gh-meter {
+            height: 5px;
+            border-radius: 999px;
+            background: var(--surface-2);
+            margin-top: 7px;
+            overflow: hidden;
+        }
+
+        .gh-meter>div {
+            height: 100%;
+            border-radius: 999px;
+            background: var(--c);
+            transition: width .35s;
+        }
+
+        .group.all-done .gh-meter>div {
+            background: var(--ok);
+        }
+
+        .gh-btn {
+            flex-shrink: 0;
+            height: 36px;
+            padding: 0 12px;
+            border-radius: 11px;
+            font-size: 13px;
+            font-weight: 800;
+            background: var(--surface-2);
+            color: var(--ink-2);
+            border: 1px solid var(--line);
+        }
+
+        .gh-btn:active {
+            transform: scale(.96);
+        }
+
+        .gh-chev {
+            width: 36px;
+            height: 36px;
+            border-radius: 11px;
+            display: grid;
+            place-items: center;
+            color: var(--muted);
+            font-size: 18px;
+            transition: transform .2s;
+        }
+
+        .gh-chev.collapsed {
+            transform: rotate(-90deg);
+        }
+
+        .items {
+            padding: 0 10px 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        /* ===== Item card ===== */
+        .item {
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            padding: 15px 14px;
+            border-radius: 16px;
+            background: var(--surface-2);
+            border: 1.5px solid transparent;
+            cursor: pointer;
+            transition: transform .12s, background .2s, border-color .2s, opacity .2s;
+        }
+
+        .item:active {
+            transform: scale(.985);
+        }
+
+        .item.urgent:not(.done) {
+            border-color: color-mix(in srgb, var(--danger) 35%, transparent);
+            background: color-mix(in srgb, var(--danger-soft) 45%, var(--surface-2));
+        }
+
+        .check {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            border: 2.5px solid color-mix(in srgb, var(--muted) 60%, transparent);
+            display: grid;
+            place-items: center;
+            color: transparent;
+            font-size: 17px;
+            transition: all .18s;
+        }
+
+        .item.done {
+            opacity: .55;
+            background: transparent;
+            border-color: var(--line);
+        }
+
+        .item.done .check {
+            background: var(--ok);
+            border-color: var(--ok);
+            color: #fff;
+        }
+
+        .item.done .item-text {
+            text-decoration: line-through;
+            text-decoration-thickness: 2px;
+            text-decoration-color: color-mix(in srgb, var(--muted) 60%, transparent);
+            color: var(--muted);
+        }
+
+        .item.pop .check {
+            animation: pop .35s cubic-bezier(.3, 1.6, .5, 1);
+        }
+
+        @keyframes pop {
+            0% {
+                transform: scale(.6);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        .item-body {
+            flex: 1;
+            min-width: 0;
+            padding-top: 3px;
+        }
+
+        .item-text {
+            font-size: 17px;
+            font-weight: 700;
+            line-height: 1.45;
+            color: var(--ink);
+        }
+
+        .tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 8px;
+        }
+
+        .tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 12.5px;
+            font-weight: 800;
+            padding: 4px 9px;
+            border-radius: 8px;
+        }
+
+        .tag.urgent {
+            background: var(--danger);
+            color: #fff;
+        }
+
+        .tag.note {
+            background: var(--warn-soft);
+            color: var(--warn-ink);
+        }
+
+        .tag.cat {
+            background: var(--surface);
+            color: var(--muted);
+            border: 1px solid var(--line);
+        }
+
+        .item-action {
+            margin-top: 12px;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .item-action .stat {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--muted);
+        }
+
+        .item-action .stat b {
+            color: var(--ink);
+        }
+
+        .pill-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 14px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 800;
+            color: #fff;
+            background: var(--accent);
+            box-shadow: var(--shadow-md);
+        }
+
+        .pill-btn.green {
+            background: var(--ok);
+        }
+
+        .pill-btn:active {
+            transform: scale(.97);
+        }
+
+        /* ===== Empty / loading ===== */
+        .empty {
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: 24px;
+            padding: 40px 24px;
+            text-align: center;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .empty .big-icon {
+            width: 72px;
+            height: 72px;
+            border-radius: 24px;
+            margin: 0 auto 14px;
+            display: grid;
+            place-items: center;
+            font-size: 36px;
+            background: var(--ok-soft);
+            color: var(--ok);
+        }
+
+        .empty .big-icon.err {
+            background: var(--danger-soft);
+            color: var(--danger);
+        }
+
+        .empty .big-icon.load {
+            background: var(--accent-soft);
+            color: var(--accent);
+        }
+
+        .empty h3 {
+            font-size: 20px;
+            font-weight: 800;
+        }
+
+        .empty p {
+            font-size: 15px;
+            color: var(--muted);
+            font-weight: 500;
+            margin-top: 6px;
+            line-height: 1.5;
+        }
+
+        .empty .pill-btn {
+            margin-top: 18px;
+            background: var(--ink);
+            color: var(--bg);
+        }
+
+        .spin {
+            animation: spin 1s linear infinite;
+            display: inline-block;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* ===== Bottom dock ===== */
+        .dock {
+            position: fixed;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 30;
+            padding: 0 12px calc(12px + var(--safe-b));
+            pointer-events: none;
+        }
+
+        .dock-inner {
+            max-width: 616px;
+            margin: 0 auto;
+            pointer-events: auto;
+            display: grid;
+            grid-template-columns: 1fr 1.25fr 1.15fr 1fr;
+            gap: 6px;
+            background: color-mix(in srgb, var(--surface) 92%, transparent);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--line);
+            border-radius: 24px;
+            padding: 6px;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .dock-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 3px;
+            padding: 8px 4px;
+            border-radius: 18px;
+            font-size: 12.5px;
+            font-weight: 800;
+            color: var(--muted);
+            position: relative;
+            transition: background .15s, color .15s;
+        }
+
+        .dock-btn i {
+            font-size: 23px;
+        }
+
+        .dock-btn.active {
+            color: var(--accent);
+            background: var(--accent-soft);
+        }
+
+        .dock-btn.primary {
+            background: var(--ok);
+            color: #fff;
+            box-shadow: 0 8px 18px -8px var(--ok);
+        }
+
+        .dock-btn .badge {
+            position: absolute;
+            top: 4px;
+            right: 8px;
+            font-size: 11px;
+            font-weight: 900;
+            padding: 2px 6px;
+            border-radius: 999px;
+            background: var(--gold);
+            color: #1c1917;
+        }
+
+        .dock-btn:active {
+            transform: scale(.96);
+        }
+
+        /* ===== Sheets / modals ===== */
+        .backdrop {
+            position: fixed;
+            inset: 0;
+            z-index: 50;
+            background: rgba(10, 8, 25, .55);
+            backdrop-filter: blur(3px);
+            -webkit-backdrop-filter: blur(3px);
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            animation: fade .2s ease;
+        }
+
+        .backdrop.center {
+            align-items: center;
+            padding: 16px;
+        }
+
+        @keyframes fade {
+            from {
+                opacity: 0;
+            }
+        }
+
+        .sheet {
+            width: 100%;
+            max-width: 560px;
+            max-height: 92vh;
+            overflow-y: auto;
+            background: var(--bg);
+            border-radius: 28px 28px 0 0;
+            padding: 10px 16px calc(20px + var(--safe-b));
+            box-shadow: var(--shadow-lg);
+            animation: up .28s cubic-bezier(.2, .9, .3, 1);
+        }
+
+        @keyframes up {
+            from {
+                transform: translateY(40px);
+                opacity: .4;
+            }
+        }
+
+        @media (min-width: 640px) {
+            .backdrop {
+                align-items: center;
+                padding: 16px;
+            }
+
+            .sheet {
+                border-radius: 28px;
+                padding-bottom: 20px;
+            }
+        }
+
+        .grabber {
+            width: 40px;
+            height: 5px;
+            border-radius: 999px;
+            background: var(--line);
+            margin: 0 auto 12px;
+        }
+
+        .sheet-head {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .sheet-head .eyebrow {
+            font-size: 12.5px;
+            font-weight: 800;
+            color: var(--accent);
+        }
+
+        .sheet-head h3 {
+            font-size: 21px;
+            font-weight: 800;
+            letter-spacing: -.01em;
+            margin-top: 3px;
+        }
+
+        .sheet-head p {
+            font-size: 13.5px;
+            color: var(--muted);
+            font-weight: 500;
+            margin-top: 4px;
+        }
+
+        .close-btn {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            display: grid;
+            place-items: center;
+            background: var(--surface);
+            border: 1px solid var(--line);
+            color: var(--ink-2);
+            font-size: 18px;
+        }
+
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-sm);
+        }
+
+        /* Attendance */
+        .att-tabs {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 4px;
+            padding: 4px;
+            border-radius: 16px;
+            background: var(--surface-2);
+            border: 1px solid var(--line);
+        }
+
+        .att-tabs button {
+            padding: 10px 4px;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--muted);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1px;
+        }
+
+        .att-tabs button span {
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        .att-tabs button.active {
+            background: var(--surface);
+            color: var(--ink);
+            box-shadow: var(--shadow-md);
+        }
+
+        .att-tabs button.active span {
+            color: var(--accent);
+        }
+
+        .att-total {
+            display: flex;
+            align-items: baseline;
+            justify-content: center;
+            gap: 6px;
+            margin: 18px 0 14px;
+        }
+
+        .att-total .n {
+            font-size: 52px;
+            font-weight: 900;
+            letter-spacing: -.03em;
+            line-height: 1;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .att-total .u {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--muted);
+        }
+
+        .att-total .l {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--muted);
+        }
+
+        .counters {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .counter {
+            padding: 14px;
+        }
+
+        .counter-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .counter-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 17px;
+            font-weight: 800;
+        }
+
+        .counter-label i {
+            width: 30px;
+            height: 30px;
+            border-radius: 10px;
+            display: grid;
+            place-items: center;
+            font-size: 17px;
+            background: color-mix(in srgb, var(--c) 15%, transparent);
+            color: var(--c);
+        }
+
+        .counter-hint {
+            font-size: 12.5px;
+            font-weight: 700;
+            color: var(--muted);
+        }
+
+        .counter-row {
+            display: grid;
+            grid-template-columns: 52px 52px 1fr 52px 52px;
+            gap: 6px;
+            align-items: stretch;
+        }
+
+        .cbtn {
+            height: 54px;
+            border-radius: 14px;
+            display: grid;
+            place-items: center;
+            background: var(--surface-2);
+            border: 1px solid var(--line);
+            font-size: 15px;
+            font-weight: 800;
+            color: var(--ink-2);
+        }
+
+        .cbtn i {
+            font-size: 22px;
+        }
+
+        .cbtn.plus {
+            background: var(--c);
+            border-color: var(--c);
+            color: #fff;
+        }
+
+        .cbtn:active {
+            transform: scale(.93);
+        }
+
+        .cval {
+            width: 100%;
+            min-width: 0;
+            height: 54px;
+            text-align: center;
+            font-size: 28px;
+            font-weight: 900;
+            font-variant-numeric: tabular-nums;
+            background: transparent;
+            border: 0;
+            border-bottom: 2px solid var(--line);
+            outline: none;
+            user-select: text;
+            -moz-appearance: textfield;
+        }
+
+        .cval::-webkit-outer-spin-button,
+        .cval::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        .cval:focus {
+            border-color: var(--c);
+        }
+
+        .summary {
+            margin-top: 14px;
+            padding: 14px;
+        }
+
+        .summary-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .summary-head span {
+            font-size: 15px;
+            font-weight: 800;
+        }
+
+        .text-btn {
+            font-size: 13px;
+            font-weight: 800;
+            color: var(--danger);
+            padding: 6px 10px;
+            border-radius: 10px;
+            background: var(--danger-soft);
+        }
+
+        .summary pre {
+            font-family: inherit;
+            white-space: pre-wrap;
+            font-size: 14px;
+            font-weight: 600;
+            line-height: 1.7;
+            background: var(--surface-2);
+            padding: 12px 14px;
+            border-radius: 12px;
+            color: var(--ink-2);
+            user-select: text;
+        }
+
+        .btn-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .big-btn {
+            height: 54px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 16px;
+            font-weight: 800;
+            color: #fff;
+            background: var(--accent);
+        }
+
+        .big-btn i {
+            font-size: 20px;
+        }
+
+        .big-btn.green {
+            background: var(--ok);
+        }
+
+        .big-btn.dark {
+            background: var(--ink);
+            color: var(--bg);
+        }
+
+        .big-btn.ghost {
+            background: var(--surface-2);
+            color: var(--ink-2);
+            border: 1px solid var(--line);
+        }
+
+        .big-btn.red {
+            background: var(--danger);
+        }
+
+        .big-btn:active {
+            transform: scale(.98);
+        }
+
+        /* Offering steps */
+        .quote {
+            padding: 14px 16px;
+            font-size: 14px;
+            font-weight: 600;
+            line-height: 1.65;
+            color: var(--muted);
+            border-left: 4px solid var(--gold);
+        }
+
+        .steps {
+            list-style: none;
+            margin: 18px 0;
+            position: relative;
+        }
+
+        .steps li {
+            position: relative;
+            display: flex;
+            gap: 14px;
+            padding-bottom: 18px;
+        }
+
+        .steps li:not(:last-child)::before {
+            content: '';
+            position: absolute;
+            left: 17px;
+            top: 38px;
+            bottom: 2px;
+            width: 2px;
+            background: var(--line);
+        }
+
+        .steps .num {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            display: grid;
+            place-items: center;
+            font-size: 16px;
+            font-weight: 900;
+            background: var(--accent);
+            color: #fff;
+            box-shadow: 0 0 0 4px var(--accent-soft);
+        }
+
+        .steps .txt {
+            font-size: 17px;
+            font-weight: 600;
+            line-height: 1.5;
+            padding-top: 6px;
+        }
+
+        .steps .txt strong {
+            font-weight: 800;
+            color: var(--accent);
+        }
+
+        /* Reset dialog */
+        .dialog {
+            width: 100%;
+            max-width: 360px;
+            background: var(--surface);
+            border-radius: 26px;
+            padding: 26px 20px 20px;
+            text-align: center;
+            box-shadow: var(--shadow-lg);
+            animation: up .25s cubic-bezier(.2, .9, .3, 1);
+        }
+
+        .dialog .big-icon {
+            width: 64px;
+            height: 64px;
+            border-radius: 22px;
+            margin: 0 auto 14px;
+            display: grid;
+            place-items: center;
+            font-size: 32px;
+            background: var(--warn-soft);
+            color: #d97706;
+        }
+
+        .dialog h3 {
+            font-size: 20px;
+            font-weight: 800;
+        }
+
+        .dialog p {
+            font-size: 15px;
+            color: var(--muted);
+            font-weight: 500;
+            margin-top: 6px;
+            line-height: 1.5;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            left: 50%;
+            bottom: calc(104px + var(--safe-b));
+            z-index: 60;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            max-width: calc(100vw - 32px);
+            padding: 12px 18px;
+            border-radius: 16px;
+            background: var(--ink);
+            color: var(--bg);
+            font-size: 15px;
+            font-weight: 700;
+            box-shadow: var(--shadow-lg);
+            animation: toastIn .25s cubic-bezier(.2, .9, .3, 1);
+        }
+
+        .toast i {
+            font-size: 20px;
+            color: var(--ok);
+        }
+
+        @keyframes toastIn {
+            from {
+                opacity: 0;
+                transform: translate(-50%, 12px);
+            }
+        }
+
+        /* ===== 사진 첨부 & 보기 버튼 (체크리스트 우측) ===== */
+        .item-right {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-shrink: 0;
+            margin-left: 10px;
+            align-self: flex-start;
+            padding-top: 2px;
+        }
+
+        .photo-btn {
+            width: 42px;
+            height: 42px;
+            border-radius: 13px;
+            display: grid;
+            place-items: center;
+            background: var(--surface);
+            border: 1.5px solid var(--line);
+            color: var(--muted);
+            font-size: 20px;
+            transition: all .16s ease;
+            position: relative;
+            padding: 0;
+            cursor: pointer;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .photo-btn:active {
+            transform: scale(.92);
+        }
+
+        .photo-btn:hover {
+            color: var(--accent);
+            border-color: var(--accent);
+        }
+
+        .photo-btn.has-photo {
+            border-color: color-mix(in srgb, var(--accent) 70%, transparent);
+            background: var(--accent-soft);
+            color: var(--accent);
+        }
+
+        .photo-btn .photo-thumb-wrap {
+            width: 100%;
+            height: 100%;
+            border-radius: 11px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .photo-btn .photo-thumb {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .photo-btn .photo-badge {
+            position: absolute;
+            bottom: -3px;
+            right: -3px;
+            min-width: 18px;
+            height: 18px;
+            padding: 0 4px;
+            border-radius: 999px;
+            background: var(--accent);
+            color: #fff;
+            font-size: 10px;
+            font-weight: 900;
+            display: grid;
+            place-items: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, .25);
+            border: 1.5px solid var(--surface);
+        }
+
+        /* ===== 사진 모달 시트 ===== */
+        .photo-item-summary {
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            padding: 12px 14px;
+            margin-bottom: 14px;
+        }
+
+        .photo-item-summary .pis-badge {
+            display: inline-block;
+            font-size: 11.5px;
+            font-weight: 800;
+            color: var(--accent);
+            background: var(--accent-soft);
+            padding: 3px 8px;
+            border-radius: 6px;
+            margin-bottom: 6px;
+        }
+
+        .photo-item-summary .pis-title {
+            font-size: 16px;
+            font-weight: 800;
+            color: var(--ink);
+            line-height: 1.45;
+        }
+
+        .photo-capture-box {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 14px;
+        }
+
+        .btn-capture {
+            height: 52px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 15px;
+            font-weight: 800;
+            box-shadow: var(--shadow-sm);
+            transition: transform .12s, opacity .15s;
+        }
+
+        .btn-capture.camera {
+            background: linear-gradient(135deg, #4f46e5, #6366f1);
+            color: #fff;
+        }
+
+        .btn-capture.album {
+            background: var(--surface);
+            color: var(--ink);
+            border: 1.5px solid var(--line);
+        }
+
+        .btn-capture:active {
+            transform: scale(.96);
+        }
+
+        .drive-status-banner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 10px 14px;
+            border-radius: 14px;
+            background: var(--surface);
+            border: 1px solid var(--line);
+            margin-bottom: 16px;
+            font-size: 13px;
+        }
+
+        .drive-status-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 700;
+        }
+
+        .drive-status-info i {
+            font-size: 18px;
+        }
+
+        .drive-status-info.connected {
+            color: var(--ok);
+        }
+
+        .drive-status-info.disconnected {
+            color: #d97706;
+        }
+
+        .drive-status-btn {
+            font-size: 12px;
+            font-weight: 800;
+            padding: 5px 10px;
+            border-radius: 8px;
+            background: var(--surface-2);
+            color: var(--ink-2);
+            border: 1px solid var(--line);
+        }
+
+        .photos-gallery-title {
+            font-size: 14px;
+            font-weight: 800;
+            color: var(--ink);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .photo-list {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        @media (min-width: 480px) {
+            .photo-list {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        .photo-card {
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: var(--shadow-sm);
+            position: relative;
+        }
+
+        .photo-card-img-wrap {
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            overflow: hidden;
+            position: relative;
+            background: #18181b;
+            cursor: pointer;
+        }
+
+        .photo-card-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform .2s ease;
+        }
+
+        .photo-card-img-wrap:hover .photo-card-img {
+            transform: scale(1.04);
+        }
+
+        .photo-card-body {
+            padding: 8px 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            background: var(--surface);
+        }
+
+        .photo-card-time {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--muted);
+        }
+
+        .photo-card-status {
+            font-size: 11px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .photo-card-status.synced {
+            color: var(--ok);
+        }
+
+        .photo-card-status.syncing {
+            color: var(--accent);
+        }
+
+        .photo-card-status.local {
+            color: var(--muted);
+        }
+
+        .photo-card-actions {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 4px;
+            padding-top: 6px;
+            border-top: 1px solid var(--line);
+        }
+
+        .photo-act-btn {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--ink-2);
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            padding: 4px 6px;
+            border-radius: 6px;
+        }
+
+        .photo-act-btn.del {
+            color: var(--danger);
+        }
+
+        .photo-act-btn.del:active {
+            background: var(--danger-soft);
+        }
+
+        .photo-act-btn.view-drive {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        .photo-empty-hint {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 36px 16px;
+            background: var(--surface);
+            border: 1.5px dashed var(--line);
+            border-radius: 18px;
+            color: var(--muted);
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .photo-empty-hint i {
+            font-size: 36px;
+            display: block;
+            margin-bottom: 8px;
+            color: var(--muted);
+        }
+
+        /* ===== 전체 화면 사진 뷰어 ===== */
+        .viewer-wrap {
+            position: fixed;
+            inset: 0;
+            z-index: 100;
+            background: rgba(0, 0, 0, .94);
+            display: flex;
+            flex-direction: column;
+            animation: fade .18s ease;
+        }
+
+        .viewer-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 18px;
+            color: #fff;
+        }
+
+        .viewer-title {
+            font-size: 15px;
+            font-weight: 700;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 75%;
+        }
+
+        .viewer-content {
+            flex: 1;
+            display: grid;
+            place-items: center;
+            padding: 12px;
+            overflow: hidden;
+        }
+
+        .viewer-content img {
+            max-width: 100%;
+            max-height: 80vh;
+            object-fit: contain;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, .7);
+        }
+
+        .viewer-bottom {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            padding: 16px;
+            background: rgba(0, 0, 0, .5);
+        }
+
+        /* ===== 구글 드라이브 설정 시트 ===== */
+        .config-step {
+            background: var(--surface-2);
+            border-radius: 16px;
+            padding: 14px 16px;
+            margin-bottom: 12px;
+            border: 1px solid var(--line);
+        }
+
+        .config-step-num {
+            display: inline-block;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: var(--accent);
+            color: #fff;
+            text-align: center;
+            line-height: 22px;
+            font-size: 12px;
+            font-weight: 800;
+            margin-right: 6px;
+        }
+
+        .config-step-title {
+            font-size: 14.5px;
+            font-weight: 800;
+            color: var(--ink);
+        }
+
+        .config-step p {
+            font-size: 13px;
+            color: var(--ink-2);
+            margin-top: 6px;
+            line-height: 1.55;
+        }
+
+        .code-box {
+            position: relative;
+            margin: 10px 0 6px;
+        }
+
+        .code-box pre {
+            background: #18181b;
+            color: #f4f4f5;
+            padding: 12px 14px;
+            border-radius: 12px;
+            font-size: 11.5px;
+            max-height: 180px;
+            overflow-y: auto;
+            font-family: Consolas, monospace;
+            white-space: pre;
+            user-select: text;
+        }
+
+        .copy-code-btn {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: rgba(255, 255, 255, .18);
+            color: #fff;
+            font-size: 12px;
+            font-weight: 700;
+            padding: 5px 9px;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .copy-code-btn:active {
+            background: rgba(255, 255, 255, .3);
+        }
+
+        .input-group {
+            margin-top: 8px;
+        }
+
+        .input-group label {
+            font-size: 13px;
+            font-weight: 800;
+            display: block;
+            margin-bottom: 6px;
+            color: var(--ink);
+        }
+
+        .input-text {
+            width: 100%;
+            padding: 12px 14px;
+            border-radius: 12px;
+            border: 1.5px solid var(--line);
+            background: var(--surface);
+            font-size: 14px;
+            color: var(--ink);
+            outline: none;
+            user-select: text;
+        }
+
+        .input-text:focus {
+            border-color: var(--accent);
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Hero: 날짜 / 예배 선택 / 진행률 -->
+    <header class="hero">
+        <div class="wrap">
+            <div class="hero-top">
+                <div>
+                    <div class="hero-date"><i class="ph-bold ph-calendar-blank"></i><span id="currentDateText"></span></div>
+                    <h1>성광교회 예배부 체크리스트</h1>
+                </div>
+                <div class="hero-actions">
+                    <button class="act" id="refreshBtn" onclick="refreshSheetData()" title="구글 시트에서 목록 새로 불러오기">
+                        <span class="icon-btn"><i class="ph-bold ph-cloud-arrow-down"></i></span>
+                        <span class="act-label">시트 갱신</span>
+                    </button>
+                    <button class="act danger" onclick="openResetModal()" title="현재 예배 초기화">
+                        <span class="icon-btn"><i class="ph-bold ph-arrow-counter-clockwise"></i></span>
+                        <span class="act-label">예배 초기화</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="seg">
+                <button onclick="selectService('service1')" id="srv-service1"><i
+                        class="ph-bold ph-number-circle-one"></i>1부</button>
+                <button onclick="selectService('service2')" id="srv-service2"><i
+                        class="ph-bold ph-number-circle-two"></i>2부</button>
+                <button onclick="selectService('afternoon')" id="srv-afternoon"><i
+                        class="ph-bold ph-sun"></i>오후</button>
+                <button onclick="selectService('dawn')" id="srv-dawn"><i class="ph-bold ph-sun-horizon"></i>특새</button>
+            </div>
+
+            <div class="progress-card">
+                <div class="ring" id="progressRingWrap">
+                    <svg viewBox="0 0 64 64">
+                        <circle class="ring-bg" cx="32" cy="32" r="27"></circle>
+                        <circle class="ring-fg" id="progressRing" cx="32" cy="32" r="27" stroke-dasharray="169.65"
+                            stroke-dashoffset="169.65"></circle>
+                    </svg>
+                    <div class="ring-text" id="progressPercent">0%</div>
+                </div>
+                <div class="pc-body">
+                    <div class="pc-title" id="progressLabel">1부 예배</div>
+                    <div class="pc-sub" id="progressSub">불러오는 중...</div>
+                </div>
+                <button class="switch" id="filterBtn" onclick="toggleFilterUnchecked()" aria-label="남은 항목만 보기">
+                    <div class="switch-track"></div>
+                    <span class="switch-label">남은 것만</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Sticky 카테고리 칩 -->
+    <div class="chipbar">
+        <div class="wrap" style="padding:0">
+            <div class="tiles" id="categoryTabsBar"></div>
+        </div>
+        <div class="thin-progress">
+            <div id="progressBar" style="width:0%"></div>
+        </div>
+    </div>
+
+    <main class="wrap">
+        <div class="search">
+            <i class="ph-bold ph-magnifying-glass"></i>
+            <input id="searchInput" type="search" oninput="handleSearch(this.value)" placeholder="작업 검색 (가운, 주보, 명패...)"
+                autocomplete="off" />
+            <button id="clearSearchBtn" class="clear hidden" onclick="clearSearch()" aria-label="검색어 지우기"><i
+                    class="ph-bold ph-x"></i></button>
+        </div>
+
+        <div id="checklistContainer"></div>
+    </main>
+
+    <!-- Bottom Dock -->
+    <nav class="dock">
+        <div class="dock-inner">
+            <button onclick="selectCategory('ALL')" id="bottomBtn-all" class="dock-btn">
+                <i class="ph-bold ph-list-checks"></i>
+                <span>전체 목록</span>
+            </button>
+            <button onclick="openAttendanceModal()" class="dock-btn primary">
+                <i class="ph-bold ph-users-three"></i>
+                <span>출석 계수</span>
+                <span id="bottomAttBadge" class="badge">0</span>
+            </button>
+            <button onclick="openOfferingManualModal()" class="dock-btn">
+                <i class="ph-bold ph-book-open-text"></i>
+                <span>사회자 부재 시</span>
+            </button>
+            <button onclick="openDriveConfigModal()" id="bottomBtn-drive" class="dock-btn" title="구글 드라이브 (\예배부 데이터) 연동 설정">
+                <i class="ph-bold ph-google-drive-logo" id="driveStatusIcon" style="font-size:24px;"></i>
+                <span>드라이브 연동</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- 출석 계수기 -->
+    <div id="attendanceModal" class="backdrop hidden" onclick="if (event.target === this) closeAttendanceModal()">
+        <div class="sheet">
+            <div class="grabber"></div>
+            <div class="sheet-head">
+                <div>
+                    <div class="eyebrow">8. 예배중 · 기도시간</div>
+                    <h3>출석체크 계수기</h3>
+                    <p>방송실, 성가대 포함, 인터넷 예배를 집계합니다.</p>
+                </div>
+                <button class="close-btn" onclick="closeAttendanceModal()" aria-label="닫기"><i
+                        class="ph-bold ph-x"></i></button>
+            </div>
+
+            <div class="att-tabs">
+                <button onclick="selectAttService('att1')" id="attTab-att1"></button>
+                <button onclick="selectAttService('att2')" id="attTab-att2"></button>
+                <button onclick="selectAttService('att3')" id="attTab-att3"></button>
+            </div>
+
+            <div class="att-total">
+                <span class="l" id="attTotalLabel">1부 합계</span>
+                <span class="n" id="attTotalNum">0</span>
+                <span class="u">명</span>
+            </div>
+
+            <div id="counterCardsContainer" class="counters"></div>
+
+            <div class="drive-status-banner" style="margin: 14px 0 10px;">
+                <div class="drive-status-info" id="attDriveBannerStatus">
+                    <i class="ph-bold ph-google-drive-logo"></i>
+                    <span id="attDriveBannerText">구글 드라이브 (\예배부 데이터\출석) 확인 중</span>
+                </div>
+                <button class="drive-status-btn" onclick="openDriveConfigModal()">드라이브 설정</button>
+            </div>
+
+            <div class="card summary">
+                <div class="summary-head">
+                    <span>전체 예배 출석 요약</span>
+                    <button class="text-btn" onclick="resetAttendance()">0으로 초기화</button>
+                </div>
+                <pre id="attendanceSummaryPreview"></pre>
+                <div class="btn-row" style="grid-template-columns: 1fr 1fr; margin-top: 12px;">
+                    <button class="big-btn green" onclick="copyAttendanceReport()"><i class="ph-bold ph-copy"></i>내역
+                        복사</button>
+                    <button class="big-btn ghost" onclick="saveAttendanceFileToDriveOnly()"><i
+                            class="ph-bold ph-cloud-arrow-up"></i>드라이브에 파일 기록</button>
+                </div>
+                <div style="margin-top: 8px;">
+                    <button class="big-btn" style="width: 100%;" onclick="markAttendanceTaskDone()"><i
+                            class="ph-bold ph-check-circle"></i>출석체크 완료 (드라이브 & 기기 저장)</button>
+                </div>
+                <div id="attDriveFileLinkBox" class="hidden" style="margin-top: 8px; text-align: center;">
+                    <a id="attDriveFileLink" href="#" target="_blank" rel="noopener noreferrer"
+                        style="font-size: 13px; font-weight: 800; color: var(--accent); text-decoration: underline;">
+                        <i class="ph-bold ph-arrow-square-out"></i> 구글드라이브 (\예배부 데이터\출석)에서 파일 확인하기
+                    </a>
+                </div>
+                <div style="font-size:12px; color:var(--muted); text-align:center; margin-top:8px; font-weight:600;"><i
+                        class="ph-bold ph-file-text"></i> 출석체크 완료 시 <b>\예배부 데이터\출석</b> 폴더에 <b>[날짜-x부예배.txt]</b> 파일이 자동
+                    기록됩니다.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 사회자 부재 시 헌금 전달 매뉴얼 -->
+    <div id="offeringModal" class="backdrop hidden" onclick="if (event.target === this) closeOfferingManualModal()">
+        <div class="sheet">
+            <div class="grabber"></div>
+            <div class="sheet-head">
+                <div>
+                    <div class="eyebrow">5. 기도/헌금위원</div>
+                    <h3>사회자 없을 때 헌금 전달 순서</h3>
+                </div>
+                <button class="close-btn" onclick="closeOfferingManualModal()" aria-label="닫기"><i
+                        class="ph-bold ph-x"></i></button>
+            </div>
+            <div class="card quote">
+                "사회자 없을 때 헌금모음을 기도자에게 전달-목사님에게 전달(설교 마치고 기도하실 때에 가운 입은 채로 강대상에 올라가서 받아서 목사님에게 전달-계속 무대에 있다가 축도반주 중에 험금함을
+                예배부장에게 전달)"
+            </div>
+            <ol class="steps">
+                <li><span class="num">1</span><span class="txt">헌금모음을 먼저 <strong>기도자에게 전달</strong>합니다.</span></li>
+                <li><span class="num">2</span><span class="txt">설교 마치고 기도하실 때, 기도자가 <strong>가운 입은 채로 강대상에 올라가서</strong>
+                        받아 <strong>목사님에게 전달</strong>합니다.</span></li>
+                <li><span class="num">3</span><span class="txt">기도자는 내려오지 않고 <strong>계속 무대에 대기</strong>합니다.</span></li>
+                <li><span class="num">4</span><span class="txt"><strong>축도반주 중에</strong> 헌금함을 <strong>예배부장에게
+                            전달</strong>합니다.</span></li>
+            </ol>
+            <button class="big-btn dark" style="width:100%" onclick="closeOfferingManualModal()">확인했습니다</button>
+        </div>
+    </div>
+
+    <!-- 초기화 확인 -->
+    <div id="resetModal" class="backdrop center hidden" onclick="if (event.target === this) closeResetModal()">
+        <div class="dialog">
+            <div class="big-icon"><i class="ph-bold ph-arrow-counter-clockwise"></i></div>
+            <h3 id="resetModalTitle">예배 초기화</h3>
+            <p id="resetModalDesc">현재 선택된 예배의 체크 항목을 모두 해제할까요?</p>
+            <div class="btn-row" style="margin-top:20px">
+                <button class="big-btn ghost" onclick="closeResetModal()">취소</button>
+                <button class="big-btn red" onclick="confirmResetService()">초기화</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 사진 관리 모달 -->
+    <div id="photoModal" class="backdrop hidden" onclick="if (event.target === this) closePhotoModal()">
+        <div class="sheet">
+            <div class="grabber"></div>
+            <div class="sheet-head">
+                <div>
+                    <div class="eyebrow" id="photoModalCat">카테고리</div>
+                    <h3 id="photoModalTitle">사진 촬영 및 첨부</h3>
+                    <p id="photoModalSub">체크리스트 작업 현장 사진을 기록합니다.</p>
+                </div>
+                <button class="close-btn" onclick="closePhotoModal()" aria-label="닫기"><i
+                        class="ph-bold ph-x"></i></button>
+            </div>
+
+            <div class="photo-item-summary">
+                <span class="pis-badge" id="photoItemCode">코드</span>
+                <div class="pis-title" id="photoItemText">항목 내용</div>
+            </div>
+
+            <!-- 숨겨진 파일 인풋 -->
+            <input type="file" id="cameraInput" accept="image/*" capture="environment" class="hidden"
+                onchange="handleFileSelected(this.files)" />
+            <input type="file" id="galleryInput" accept="image/*" multiple class="hidden"
+                onchange="handleFileSelected(this.files)" />
+
+            <div class="photo-capture-box">
+                <button class="btn-capture camera" onclick="triggerCamera()">
+                    <i class="ph-bold ph-camera"></i>
+                    <span>새 사진 찍기</span>
+                </button>
+                <button class="btn-capture album" onclick="triggerGallery()">
+                    <i class="ph-bold ph-images"></i>
+                    <span>사진 첨부하기</span>
+                </button>
+            </div>
+
+            <!-- 구글 드라이브 동기화 상태 -->
+            <div class="drive-status-banner">
+                <div class="drive-status-info" id="driveBannerStatus">
+                    <i class="ph-bold ph-google-drive-logo"></i>
+                    <span id="driveBannerText">구글 드라이브 연결 확인 중</span>
+                </div>
+                <button class="drive-status-btn" onclick="openDriveConfigModal()">설정</button>
+            </div>
+
+            <div class="photos-gallery-title">
+                <span>등록된 사진 <b id="photoCountBadge" style="color:var(--accent)">0</b>장</span>
+                <span style="font-size:12px; font-weight:600; color:var(--muted)">사진 터치 시 확대</span>
+            </div>
+
+            <div id="photoListContainer" class="photo-list"></div>
+
+            <div style="margin-top:16px;">
+                <button class="big-btn ghost" style="width:100%" onclick="closePhotoModal()">닫기</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 사진 확대 뷰어 -->
+    <div id="photoViewerModal" class="viewer-wrap hidden" onclick="if (event.target === this) closePhotoViewer()">
+        <div class="viewer-top">
+            <span class="viewer-title" id="viewerTitle">사진 크게 보기</span>
+            <button class="close-btn" style="background:rgba(255,255,255,.2); color:#fff; border:0;"
+                onclick="closePhotoViewer()"><i class="ph-bold ph-x"></i></button>
+        </div>
+        <div class="viewer-content">
+            <img id="viewerImage" src="" alt="확대 사진" />
+        </div>
+        <div class="viewer-bottom">
+            <a id="viewerDriveBtn" class="pill-btn green hidden" target="_blank" rel="noopener noreferrer"><i
+                    class="ph-bold ph-arrow-square-out"></i>구글드라이브에서 원본 보기</a>
+            <button class="pill-btn" onclick="closePhotoViewer()"><i class="ph-bold ph-check"></i>닫기</button>
+        </div>
+    </div>
+
+    <!-- 구글 드라이브 저장소 설정 모달 -->
+    <div id="driveConfigModal" class="backdrop hidden" onclick="if (event.target === this) closeDriveConfigModal()">
+        <div class="sheet">
+            <div class="grabber"></div>
+            <div class="sheet-head">
+                <div>
+                    <div class="eyebrow">Google Drive 연동</div>
+                    <h3>구글 드라이브 (\예배부 데이터) 연동 설정</h3>
+                    <p>사진 데이터는 <b>\예배부 데이터\사진</b>에, 출석데이터는 <b>\예배부 데이터\출석</b>에 각각 자동 분류되어 저장됩니다.</p>
+                </div>
+                <button class="close-btn" onclick="closeDriveConfigModal()" aria-label="닫기"><i
+                        class="ph-bold ph-x"></i></button>
+            </div>
+
+            <div class="config-step">
+                <div class="config-step-title"><span class="config-step-num">1</span>Google Apps Script 코드 배포</div>
+                <p>구글 스프레드시트의 <b>[확장 프로그램] → [Apps Script]</b> 또는 <a href="https://script.google.com" target="_blank"
+                        style="color:var(--accent); text-decoration:underline; font-weight:700;">script.google.com</a>에서
+                    새 스크립트를 열고 아래 코드를 그대로 붙여넣습니다.</p>
+                <div class="code-box">
+                    <pre id="gasScriptCode">function doPost(e) {
+  try {
+    var data = JSON.parse(e.postData.contents);
+    
+    // 1. 최상위 루트 폴더: "예배부 데이터"
+    var rootFolderName = "예배부 데이터";
+    var rootFolders = DriveApp.getFoldersByName(rootFolderName);
+    var rootFolder = rootFolders.hasNext() ? rootFolders.next() : DriveApp.createFolder(rootFolderName);
+    
+    // 2. 하위 폴더: "사진" 또는 "출석"
+    var subFolderName = (data.type === 'photo' || data.subFolder === '사진' || (!data.text && data.base64)) ? "사진" : "출석";
+    if (data.subFolder) subFolderName = data.subFolder;
+    
+    var subFolders = rootFolder.getFoldersByName(subFolderName);
+    var targetFolder = subFolders.hasNext() ? subFolders.next() : rootFolder.createFolder(subFolderName);
+    
+    var fileName = data.fileName || ('예배부_' + Utilities.formatDate(new Date(), 'GMT+9', 'yyyyMMdd_HHmmss') + (subFolderName === '사진' ? '.jpg' : '.txt'));
+    var file;
+    
+    // 3. 파일 생성 (출석 텍스트 or 사진 바이너리)
+    if (data.text) {
+      file = targetFolder.createFile(fileName, data.text, MimeType.PLAIN_TEXT);
+    } else if (data.base64) {
+      var base64Data = data.base64;
+      if (base64Data.indexOf('base64,') > -1) {
+        base64Data = base64Data.split('base64,')[1];
+      }
+      var decoded = Utilities.base64Decode(base64Data);
+      var blob = Utilities.newBlob(decoded, data.mimeType || 'image/jpeg', fileName);
+      file = targetFolder.createFile(blob);
+    } else {
+      throw new Error('전송할 데이터가 없습니다.');
+    }
+    
+    file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+    
+    return ContentService.createTextOutput(JSON.stringify({
+      success: true,
+      fileId: file.getId(),
+      fileName: file.getName(),
+      viewUrl: file.getUrl(),
+      savedPath: '\\예배부 데이터\\' + subFolderName
+    })).setMimeType(ContentService.MimeType.JSON);
+  } catch (err) {
+    return ContentService.createTextOutput(JSON.stringify({
+      success: false,
+      error: err.toString()
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+function doGet(e) {
+  return ContentService.createTextOutput(JSON.stringify({
+    status: 'ok',
+    folder: '예배부 데이터',
+    subFolders: ['사진', '출석'],
+    message: '성광교회 예배부 데이터 저장소 (사진: \\예배부 데이터\\사진, 출석: \\예배부 데이터\\출석) 준비 완료'
+  })).setMimeType(ContentService.MimeType.JSON);
+}</pre>
+                    <button class="copy-code-btn" onclick="copyGasCode()"><i class="ph-bold ph-copy"></i>코드 복사</button>
+                </div>
+            </div>
+
+            <div class="config-step">
+                <div class="config-step-title"><span class="config-step-num">2</span>웹 앱으로 배포하기</div>
+                <p>Apps Script 우측 상단의 <b>[배포] → [새 배포]</b>를 클릭합니다.<br>
+                    • 유형 선택: <b>웹 앱</b><br>
+                    • 다음 사용자로 실행: <b>나 (내 구글 계정)</b><br>
+                    • 액세스 권한이 있는 사용자: <b>모든 사용자(Anyone)</b><br>
+                    배포 후 발급되는 <b>웹 앱 URL</b>을 복사하여 아래에 입력하세요.</p>
+            </div>
+
+            <div class="card" style="padding:14px; margin-bottom:14px;">
+                <div class="input-group">
+                    <label for="driveWebhookInput">구글 드라이브 웹 앱 URL</label>
+                    <input id="driveWebhookInput" class="input-text" type="url"
+                        placeholder="https://script.google.com/macros/s/.../exec" />
+                </div>
+                <div class="btn-row" style="margin-top:10px;">
+                    <button class="big-btn ghost" onclick="testDriveConnection()"><i class="ph-bold ph-plugs"></i>연결
+                        테스트</button>
+                    <button class="big-btn green" onclick="saveDriveWebhookUrl()"><i
+                            class="ph-bold ph-floppy-disk"></i>설정 저장</button>
+                </div>
+            </div>
+
+            <button class="big-btn dark" style="width:100%" onclick="closeDriveConfigModal()">닫기</button>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast" class="toast hidden" role="status">
+        <i class="ph-fill ph-check-circle"></i>
+        <span id="toastMsg">완료되었습니다!</span>
+    </div>
+
+    <script>
+        /**
+         * 데이터 소스: Google 스프레드시트 (A열: 작업구분, B열: 순서코드, C열: 작업내용)
+         * 선택 열(헤더명으로 인식): '배지' 또는 '비고' → 배지, '긴급' 또는 '알림' → 빨간 알림 배지
+         * ※ 시트는 "링크가 있는 모든 사용자 - 뷰어"로 공유되어 있어야 합니다.
+         */
+        const SHEET_ID = '1kLaPVMVSHAa8AfsI2BFzvv71ScoS69IFg4iILiKbFuY';
+        const SHEET_GID = '805538884';
+        const SHEET_CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=${SHEET_GID}`;
+        const DATA_CACHE_KEY = 'CHURCH_WORSHIP_SHEET_DATA_CACHE';
+
+        // 순서코드별 색상 (데이터가 아닌 표시용 설정)
+        const CATEGORY_COLORS = {
+            '1': '#2563eb', '2': '#e11d48', '3': '#4f46e5', '5': '#d97706', '7': '#059669',
+            '8': '#7c3aed', '9': '#0d9488', '99': '#db2777', 'X': '#64748b'
+        };
+        const FALLBACK_COLORS = ['#0891b2', '#ea580c', '#65a30d', '#c026d3'];
+
+        const SERVICE_NAMES = {
+            service1: '1부 예배',
+            service2: '2부 예배',
+            afternoon: '오후 예배',
+            dawn: '특별새벽기도'
+        };
+
+        let CATEGORIES = [];
+        let SPREADSHEET_ITEMS = [];
+        let lastToggledId = null;
+        let wasComplete = false;
+
+        function esc(s) {
+            return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        }
+
+        function parseCSV(text) {
+            const rows = [];
+            let row = [], field = '', inQuotes = false;
+            for (let i = 0; i < text.length; i++) {
+                const c = text[i];
+                if (inQuotes) {
+                    if (c === '"') {
+                        if (text[i + 1] === '"') { field += '"'; i++; }
+                        else inQuotes = false;
+                    } else field += c;
+                } else if (c === '"') inQuotes = true;
+                else if (c === ',') { row.push(field); field = ''; }
+                else if (c === '\n' || c === '\r') {
+                    if (c === '\r' && text[i + 1] === '\n') i++;
+                    row.push(field); rows.push(row); row = []; field = '';
+                } else field += c;
+            }
+            if (field !== '' || row.length) { row.push(field); rows.push(row); }
+            return rows;
+        }
+
+        function hashId(str) {
+            let h = 5381;
+            for (let i = 0; i < str.length; i++) h = ((h << 5) + h + str.charCodeAt(i)) | 0;
+            return 't_' + (h >>> 0).toString(36);
+        }
+
+        function compareCode(a, b) {
+            const na = parseFloat(a), nb = parseFloat(b);
+            const ia = isNaN(na), ib = isNaN(nb);
+            if (!ia && !ib) return na - nb;
+            if (ia && ib) return a.localeCompare(b);
+            return ia ? 1 : -1; // 숫자 코드가 먼저, 문자(X 등)는 뒤
+        }
+
+        function buildDataFromRows(rows) {
+            rows = rows.map(r => r.map(c => (c || '').trim())).filter(r => r.some(c => c));
+            if (!rows.length) throw new Error('시트가 비어 있습니다.');
+
+            // 헤더 인식
+            let col = { cat: 0, code: 1, text: 2, badge: -1, urgent: -1 };
+            const header = rows[0];
+            const findCol = (...keys) => header.findIndex(h => keys.some(k => h.includes(k)));
+            const hasHeader = findCol('작업구분', '순서코드', '작업내용') !== -1;
+            if (hasHeader) {
+                const c = findCol('작업구분'), o = findCol('순서코드', '코드'), t = findCol('작업내용', '내용');
+                if (c !== -1) col.cat = c;
+                if (o !== -1) col.code = o;
+                if (t !== -1) col.text = t;
+                col.badge = findCol('배지', '비고');
+                col.urgent = findCol('긴급', '알림');
+                rows = rows.slice(1);
+            }
+
+            const items = [];
+            const catMap = new Map();
+            const idCount = {};
+            rows.forEach(r => {
+                const code = (r[col.code] || '').replace(/\.$/, '');
+                const text = r[col.text] || '';
+                if (!code || !text) return;
+                let catName = (r[col.cat] || '').replace(new RegExp('^' + code.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\.?\\s*'), '') || '기타';
+
+                if (!catMap.has(code)) catMap.set(code, catName);
+                catName = catMap.get(code);
+
+                let id = hashId(code + '|' + text);
+                idCount[id] = (idCount[id] || 0) + 1;
+                if (idCount[id] > 1) id += '_' + idCount[id];
+
+                const item = { id, code, category: catName, text };
+                if (col.badge !== -1 && r[col.badge]) item.badge = r[col.badge];
+                if (col.urgent !== -1 && r[col.urgent]) item.urgent = r[col.urgent];
+                if (text.includes('출석체크')) item.actionType = 'attendanceModal';
+                else if (text.includes('사회자 없을 때')) item.actionType = 'offeringManual';
+                items.push(item);
+            });
+
+            if (!items.length) throw new Error('유효한 항목이 없습니다.');
+
+            const cats = [...catMap.entries()]
+                .sort((a, b) => compareCode(a[0], b[0]))
+                .map(([code, name]) => ({ code, name, label: `${code}. ${name}` }));
+            const order = cats.map(c => c.code);
+            items.sort((a, b) => order.indexOf(a.code) - order.indexOf(b.code));
+            return { categories: cats, items };
+        }
+
+        function applyData(data) {
+            let fb = 0;
+            // 색상은 캐시와 무관하게 항상 현재 설정으로 다시 지정
+            CATEGORIES = data.categories.map(c => ({
+                code: c.code, name: c.name, label: c.label,
+                color: CATEGORY_COLORS[c.code] || FALLBACK_COLORS[fb++ % FALLBACK_COLORS.length]
+            }));
+            SPREADSHEET_ITEMS = data.items;
+            if (appState.selectedCategory !== 'ALL' && !CATEGORIES.some(c => c.code === appState.selectedCategory)) {
+                appState.selectedCategory = 'ALL';
+            }
+        }
+
+        function showLoading(msg) {
+            document.getElementById('checklistContainer').innerHTML = `
+                <div class="empty">
+                    <div class="big-icon load"><i class="ph-bold ph-spinner-gap spin"></i></div>
+                    <h3>${msg}</h3>
+                </div>`;
+        }
+
+        // 성공하면 true, 실패하면 false. quiet이면 실패 알림을 호출한 쪽에 맡김
+        async function loadSheetData(quiet) {
+            // 캐시가 있으면 먼저 표시 (오프라인 대비)
+            let cached = null;
+            try { cached = JSON.parse(localStorage.getItem(DATA_CACHE_KEY) || 'null'); } catch (e) { }
+            if (cached && cached.items && cached.items.length) {
+                applyData(cached);
+                renderAll();
+            } else {
+                showLoading('체크리스트를 불러오는 중...');
+            }
+
+            try {
+                const res = await fetch(SHEET_CSV_URL + '&_=' + Date.now(), { cache: 'no-store' });
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                const text = await res.text();
+                if (text.trim().startsWith('<')) throw new Error('시트 공유 권한을 확인하세요 (링크가 있는 모든 사용자 - 뷰어).');
+                const data = buildDataFromRows(parseCSV(text));
+                applyData(data);
+                try { localStorage.setItem(DATA_CACHE_KEY, JSON.stringify(data)); } catch (e) { }
+                renderAll();
+                return true;
+            } catch (e) {
+                console.error('Sheet load error:', e);
+                if (cached && cached.items && cached.items.length) {
+                    if (!quiet) showToast('시트 연결 실패 – 저장된 데이터로 표시합니다.', 'ph-wifi-slash');
+                } else {
+                    document.getElementById('checklistContainer').innerHTML = `
+                        <div class="empty">
+                            <div class="big-icon err"><i class="ph-bold ph-warning-circle"></i></div>
+                            <h3>데이터를 불러오지 못했습니다</h3>
+                            <p>${esc(e.message)}</p>
+                            <button class="pill-btn" onclick="loadSheetData()"><i class="ph-bold ph-arrow-clockwise"></i>다시 시도</button>
+                        </div>`;
+                }
+                return false;
+            }
+        }
+
+        const STORAGE_KEY = 'CHURCH_WORSHIP_SHEET_V2';
+        let appState = {
+            currentService: 'service1', // 'service1' | 'service2' | 'afternoon' | 'dawn'
+            selectedCategory: 'ALL',    // 'ALL' 또는 순서코드
+            filterUnchecked: false,
+            searchQuery: '',
+            collapsedGroups: {},        // 'ALL' 보기에서 접힌 그룹
+            checkedByService: {
+                service1: {},
+                service2: {},
+                afternoon: {},
+                dawn: {}
+            },
+            currentAttTab: 'att1',
+            attendance: {
+                att1: { male: 0, female: 0, broadcast: 0 },
+                att2: { male: 0, female: 0, broadcast: 0 },
+                att3: { male: 0, female: 0, broadcast: 0 }
+            }
+        };
+
+        function loadState() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                if (raw) {
+                    const parsed = JSON.parse(raw);
+                    appState = {
+                        ...appState,
+                        ...parsed,
+                        searchQuery: '',
+                        checkedByService: { ...appState.checkedByService, ...(parsed.checkedByService || {}) },
+                        attendance: { ...appState.attendance, ...(parsed.attendance || {}) },
+                        collapsedGroups: { ...(parsed.collapsedGroups || {}) }
+                    };
+                }
+            } catch (e) {
+                console.error('State load error:', e);
+            }
+        }
+
+        function saveState() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+            } catch (e) {
+                console.error('State save error:', e);
+            }
+        }
+
+        function buzz(ms) {
+            try { if (navigator.vibrate) navigator.vibrate(ms || 10); } catch (e) { }
+        }
+
+        function updateDateDisplay() {
+            const now = new Date();
+            const days = ['일', '월', '화', '수', '목', '금', '토'];
+            document.getElementById('currentDateText').textContent =
+                `${now.getFullYear()}년 ${now.getMonth() + 1}월 ${now.getDate()}일 (${days[now.getDay()]})`;
+        }
+
+        function selectService(srvKey) {
+            appState.currentService = srvKey;
+            if (srvKey === 'service1') appState.currentAttTab = 'att1';
+            if (srvKey === 'service2') appState.currentAttTab = 'att2';
+            if (srvKey === 'afternoon') appState.currentAttTab = 'att3';
+            wasComplete = isServiceComplete();
+            saveState();
+            renderAll();
+        }
+
+        function selectCategory(code) {
+            appState.selectedCategory = code;
+            saveState();
+            renderAll();
+            const hero = document.querySelector('.hero');
+            if (window.scrollY > hero.offsetHeight) window.scrollTo({ top: hero.offsetHeight, behavior: 'smooth' });
+        }
+
+        function toggleFilterUnchecked() {
+            appState.filterUnchecked = !appState.filterUnchecked;
+            saveState();
+            renderAll();
+        }
+
+        function handleSearch(val) {
+            appState.searchQuery = val.trim();
+            document.getElementById('clearSearchBtn').classList.toggle('hidden', !appState.searchQuery);
+            renderChecklist();
+        }
+
+        function clearSearch() {
+            appState.searchQuery = '';
+            document.getElementById('searchInput').value = '';
+            document.getElementById('clearSearchBtn').classList.add('hidden');
+            renderChecklist();
+        }
+
+        function isServiceComplete() {
+            const checkedMap = appState.checkedByService[appState.currentService] || {};
+            return SPREADSHEET_ITEMS.length > 0 && SPREADSHEET_ITEMS.every(i => checkedMap[i.id]);
+        }
+
+        function afterCheckChange() {
+            saveState();
+            renderAll();
+            const done = isServiceComplete();
+            if (done && !wasComplete) {
+                buzz([30, 60, 30]);
+                showToast(`${SERVICE_NAMES[appState.currentService]} 모든 항목 완료! 수고하셨습니다 🙏`, 'ph-confetti');
+            }
+            wasComplete = done;
+        }
+
+        function toggleItemCheck(itemId) {
+            const srv = appState.currentService;
+            if (!appState.checkedByService[srv]) appState.checkedByService[srv] = {};
+            const next = !appState.checkedByService[srv][itemId];
+            appState.checkedByService[srv][itemId] = next;
+            lastToggledId = next ? itemId : null;
+            buzz(10);
+            afterCheckChange();
+            lastToggledId = null;
+        }
+
+        function toggleCategoryGroupAll(code) {
+            const srv = appState.currentService;
+            if (!appState.checkedByService[srv]) appState.checkedByService[srv] = {};
+            const groupItems = SPREADSHEET_ITEMS.filter(i => i.code === code);
+            const allChecked = groupItems.every(i => !!appState.checkedByService[srv][i.id]);
+            groupItems.forEach(i => {
+                appState.checkedByService[srv][i.id] = !allChecked;
+            });
+            const catObj = CATEGORIES.find(c => c.code === code);
+            buzz(15);
+            afterCheckChange();
+            if (!isServiceComplete()) {
+                showToast(!allChecked ? `${catObj.label} 전체 완료` : `${catObj.label} 전체 해제`, !allChecked ? 'ph-check-circle' : 'ph-arrow-counter-clockwise');
+            }
+        }
+
+        function toggleGroupCollapse(code) {
+            appState.collapsedGroups[code] = !appState.collapsedGroups[code];
+            saveState();
+            renderChecklist();
+        }
+
+        function renderHeaderAndTabs() {
+            // 1. 예배 선택
+            ['service1', 'service2', 'afternoon', 'dawn'].forEach(s => {
+                const btn = document.getElementById(`srv-${s}`);
+                if (btn) btn.classList.toggle('active', appState.currentService === s);
+            });
+
+            // 2. 진행률
+            const checkedMap = appState.checkedByService[appState.currentService] || {};
+            const totalCount = SPREADSHEET_ITEMS.length;
+            const doneCount = SPREADSHEET_ITEMS.filter(i => checkedMap[i.id]).length;
+            const remaining = totalCount - doneCount;
+            const pct = totalCount ? Math.round((doneCount / totalCount) * 100) : 0;
+
+            document.getElementById('progressLabel').textContent = SERVICE_NAMES[appState.currentService];
+            document.getElementById('progressSub').innerHTML = !totalCount
+                ? '불러오는 중...'
+                : remaining === 0
+                    ? `${totalCount}개 모두 완료했어요 ✨`
+                    : `${doneCount} / ${totalCount} 완료 · <b>${remaining}개 남음</b>`;
+            document.getElementById('progressPercent').textContent = `${pct}%`;
+            document.getElementById('progressBar').style.width = `${pct}%`;
+            const C = 2 * Math.PI * 27;
+            document.getElementById('progressRing').style.strokeDashoffset = C * (1 - pct / 100);
+            document.getElementById('progressRingWrap').classList.toggle('complete', totalCount > 0 && remaining === 0);
+
+            // 3. 남은 것만 스위치
+            document.getElementById('filterBtn').classList.toggle('on', appState.filterUnchecked);
+
+            // 4. 카테고리별 진행 타일
+            const tileHtml = (key, codeHtml, name, color, done, total) => {
+                const rem = total - done;
+                const pct = total ? (done / total) * 100 : 0;
+                return `
+                    <button class="tile ${rem === 0 ? 'done' : ''} ${appState.selectedCategory === key ? 'active' : ''}" style="--c:${color}" onclick="selectCategory('${esc(key)}')" title="${esc(name)} ${done}/${total}">
+                        <div class="tile-top">
+                            <span class="tile-code">${codeHtml}</span>
+                            <span class="tile-cnt">${rem === 0 ? '<i class="ph-bold ph-check"></i>' : `<b>${done}</b>/${total}`}</span>
+                        </div>
+                        <div class="tile-name">${esc(name)}</div>
+                        <div class="tile-bar"><i style="width:${pct}%"></i></div>
+                    </button>`;
+            };
+            let tabsHtml = tileHtml('ALL', '<i class="ph-bold ph-list-checks"></i>', '전체', 'var(--accent)', doneCount, totalCount);
+            CATEGORIES.forEach(cat => {
+                const catItems = SPREADSHEET_ITEMS.filter(i => i.code === cat.code);
+                const done = catItems.filter(i => checkedMap[i.id]).length;
+                tabsHtml += tileHtml(cat.code, esc(cat.code), cat.name, cat.color, done, catItems.length);
+            });
+            document.getElementById('categoryTabsBar').innerHTML = tabsHtml;
+
+            // 5. 하단 버튼
+            document.getElementById('bottomBtn-all').classList.toggle('active', appState.selectedCategory === 'ALL');
+            const grandAtt = getServiceSubtotal('att1') + getServiceSubtotal('att2') + getServiceSubtotal('att3');
+            document.getElementById('bottomAttBadge').textContent = grandAtt;
+        }
+
+        function renderChecklist() {
+            if (!SPREADSHEET_ITEMS.length) return;
+            const container = document.getElementById('checklistContainer');
+            const checkedMap = appState.checkedByService[appState.currentService] || {};
+            const query = appState.searchQuery.toLowerCase();
+            const isAll = appState.selectedCategory === 'ALL';
+
+            const targetCategories = isAll
+                ? CATEGORIES
+                : CATEGORIES.filter(c => c.code === appState.selectedCategory);
+
+            let html = '';
+            let totalVisibleItems = 0;
+
+            targetCategories.forEach(cat => {
+                let items = SPREADSHEET_ITEMS.filter(i => i.code === cat.code);
+                const totalInCategory = items.length;
+                const doneInCategory = items.filter(i => checkedMap[i.id]).length;
+
+                if (appState.filterUnchecked) items = items.filter(i => !checkedMap[i.id]);
+                if (query) {
+                    items = items.filter(i =>
+                        i.text.toLowerCase().includes(query) ||
+                        i.category.toLowerCase().includes(query) ||
+                        i.code.toLowerCase().includes(query)
+                    );
+                }
+                if (items.length === 0) return;
+                totalVisibleItems += items.length;
+
+                const isCollapsed = isAll && !!appState.collapsedGroups[cat.code] && !query;
+                const allGroupDone = doneInCategory === totalInCategory;
+                const groupPct = totalInCategory ? (doneInCategory / totalInCategory) * 100 : 0;
+                const code = esc(cat.code);
+
+                html += `
+                    <section class="group ${allGroupDone ? 'all-done' : ''}" style="--c:${cat.color}">
+                        <div class="group-head">
+                            <${isAll ? `button onclick="toggleGroupCollapse('${code}')"` : 'div'} class="gh-main">
+                                <span class="gh-code">${allGroupDone ? '<i class="ph-bold ph-check"></i>' : code}</span>
+                                <div class="gh-text">
+                                    <div class="gh-name">${esc(cat.name)} <small>${doneInCategory}/${totalInCategory}</small></div>
+                                    <div class="gh-meter"><div style="width:${groupPct}%"></div></div>
+                                </div>
+                            </${isAll ? 'button' : 'div'}>
+                            <button class="gh-btn" onclick="toggleCategoryGroupAll('${code}')">${allGroupDone ? '전체 해제' : '모두 완료'}</button>
+                            ${isAll ? `<button class="gh-chev ${isCollapsed ? 'collapsed' : ''}" onclick="toggleGroupCollapse('${code}')" aria-label="접기/펼치기"><i class="ph-bold ph-caret-down"></i></button>` : ''}
+                        </div>
+                        ${isCollapsed ? '' : `<div class="items">${items.map(item => renderSingleItemCard(item, checkedMap, !!query)).join('')}</div>`}
+                    </section>`;
+            });
+
+            if (totalVisibleItems === 0) {
+                const searching = !!query;
+                html = `
+                    <div class="empty">
+                        <div class="big-icon ${searching ? 'load' : ''}"><i class="ph-bold ${searching ? 'ph-magnifying-glass' : 'ph-check-fat'}"></i></div>
+                        <h3>${searching ? '검색 결과가 없습니다' : '남은 항목이 없습니다!'}</h3>
+                        <p>${searching ? `'${esc(appState.searchQuery)}'에 해당하는 작업을 찾지 못했어요.` : '이 범위의 작업을 모두 완료했어요. 수고하셨습니다.'}</p>
+                        ${appState.filterUnchecked ? `<button class="pill-btn" onclick="toggleFilterUnchecked()"><i class="ph-bold ph-eye"></i>완료된 항목도 보기</button>` : ''}
+                    </div>`;
+            }
+
+            container.innerHTML = html;
+        }
+
+        function renderSingleItemCard(item, checkedMap, showCategory) {
+            const isChecked = !!checkedMap[item.id];
+
+            let tags = '';
+            if (item.urgent) tags += `<span class="tag urgent"><i class="ph-fill ph-alarm"></i>${esc(item.urgent)}</span>`;
+            if (item.badge) tags += `<span class="tag note"><i class="ph-bold ph-push-pin"></i>${esc(item.badge)}</span>`;
+            if (showCategory) tags += `<span class="tag cat">${esc(item.code)}. ${esc(item.category)}</span>`;
+
+            let action = '';
+            if (item.actionType === 'attendanceModal') {
+                action = `
+                    <div class="item-action">
+                        <span class="stat">1부 <b>${getServiceSubtotal('att1')}</b> · 2부 <b>${getServiceSubtotal('att2')}</b> · 오후 <b>${getServiceSubtotal('att3')}</b></span>
+                        <button class="pill-btn green" onclick="event.stopPropagation(); openAttendanceModal()"><i class="ph-bold ph-users-three"></i>계수기 열기</button>
+                    </div>`;
+            } else if (item.actionType === 'offeringManual') {
+                action = `
+                    <div class="item-action" style="justify-content:flex-end">
+                        <button class="pill-btn" onclick="event.stopPropagation(); openOfferingManualModal()"><i class="ph-bold ph-list-numbers"></i>단계별로 보기</button>
+                    </div>`;
+            }
+
+            const pInfo = photoCache[item.id];
+            const pCount = pInfo ? pInfo.count : 0;
+            const photoBtnHtml = pCount > 0
+                ? `<button class="photo-btn has-photo" onclick="event.stopPropagation(); openPhotoModal('${item.id}')" title="사진 ${pCount}장 보기/추가">
+                     <div class="photo-thumb-wrap">
+                         <img src="${pInfo.latestThumb}" class="photo-thumb" alt="사진" />
+                         <span class="photo-badge">${pCount}</span>
+                     </div>
+                   </button>`
+                : `<button class="photo-btn" onclick="event.stopPropagation(); openPhotoModal('${item.id}')" title="사진 촬영/첨부">
+                     <i class="ph-bold ph-camera"></i>
+                   </button>`;
+
+            return `
+                <div class="item ${isChecked ? 'done' : ''} ${item.urgent ? 'urgent' : ''} ${lastToggledId === item.id ? 'pop' : ''}"
+                     role="checkbox" aria-checked="${isChecked}" onclick="toggleItemCheck('${item.id}')">
+                    <div class="check"><i class="ph-bold ph-check"></i></div>
+                    <div class="item-body">
+                        <div class="item-text">${esc(item.text)}</div>
+                        ${tags ? `<div class="tags">${tags}</div>` : ''}
+                        ${action}
+                    </div>
+                    <div class="item-right">
+                        ${photoBtnHtml}
+                    </div>
+                </div>`;
+        }
+
+        // === 모달 공통 ===
+        function openSheet(id) {
+            document.getElementById(id).classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+        function closeSheet(id) {
+            document.getElementById(id).classList.add('hidden');
+            if (!document.querySelector('.backdrop:not(.hidden)')) document.body.style.overflow = '';
+        }
+
+        // === 출석 계수기 ===
+        function openAttendanceModal() {
+            renderAttendanceModal();
+            openSheet('attendanceModal');
+        }
+
+        function closeAttendanceModal() {
+            closeSheet('attendanceModal');
+            renderAll();
+        }
+
+        function selectAttService(attKey) {
+            appState.currentAttTab = attKey;
+            saveState();
+            renderAttendanceModal();
+        }
+
+        function adjustCount(field, delta) {
+            const tab = appState.currentAttTab;
+            const currentVal = appState.attendance[tab][field] || 0;
+            appState.attendance[tab][field] = Math.max(0, currentVal + delta);
+            buzz(8);
+            saveState();
+            renderAttendanceModal();
+        }
+
+        function setDirectCount(field, valStr) {
+            const tab = appState.currentAttTab;
+            const num = parseInt(valStr, 10);
+            appState.attendance[tab][field] = isNaN(num) || num < 0 ? 0 : num;
+            saveState();
+            renderAttendanceModal();
+        }
+
+        function getServiceSubtotal(attKey) {
+            const d = appState.attendance[attKey] || { male: 0, female: 0, broadcast: 0 };
+            return (d.male || 0) + (d.female || 0) + (d.broadcast || 0);
+        }
+
+        function renderAttendanceModal() {
+            // 구글 드라이브 연동 상태 배너 갱신
+            const driveUrl = (localStorage.getItem(DRIVE_WEBHOOK_KEY) || '').trim();
+            const attBannerStatus = document.getElementById('attDriveBannerStatus');
+            const attBannerText = document.getElementById('attDriveBannerText');
+            if (attBannerStatus && attBannerText) {
+                if (driveUrl) {
+                    attBannerStatus.className = 'drive-status-info connected';
+                    attBannerText.textContent = '구글 드라이브 (\\예배부 데이터\\출석) 연동됨';
+                } else {
+                    attBannerStatus.className = 'drive-status-info disconnected';
+                    attBannerText.textContent = '구글 드라이브 미연동 (클릭하여 설정)';
+                }
+            }
+            const tabs = [
+                { key: 'att1', label: '1부' },
+                { key: 'att2', label: '2부' },
+                { key: 'att3', label: '오후' }
+            ];
+            tabs.forEach(t => {
+                const btn = document.getElementById(`attTab-${t.key}`);
+                btn.innerHTML = `${t.label}<span>${getServiceSubtotal(t.key)}명</span>`;
+                btn.classList.toggle('active', appState.currentAttTab === t.key);
+            });
+            const curTab = tabs.find(t => t.key === appState.currentAttTab);
+            document.getElementById('attTotalLabel').textContent = `${curTab.label} 합계`;
+            document.getElementById('attTotalNum').textContent = getServiceSubtotal(appState.currentAttTab);
+
+            const currentData = appState.attendance[appState.currentAttTab];
+            const fields = [
+                { key: 'male', label: '남자', hint: '방송실, 성가대 포함', icon: 'ph-gender-male', color: '#2563eb' },
+                { key: 'female', label: '여자', hint: '방송실, 성가대 포함', icon: 'ph-gender-female', color: '#e11d48' },
+                { key: 'broadcast', label: '인터넷', hint: '인터넷 예배', icon: 'ph-globe', color: '#059669' }
+            ];
+
+            document.getElementById('counterCardsContainer').innerHTML = fields.map(f => `
+                <div class="card counter" style="--c:${f.color}">
+                    <div class="counter-head">
+                        <span class="counter-label"><i class="ph-bold ${f.icon}"></i>${f.label}</span>
+                        <span class="counter-hint">${f.hint}</span>
+                    </div>
+                    <div class="counter-row">
+                        <button class="cbtn" onclick="adjustCount('${f.key}', -5)">−5</button>
+                        <button class="cbtn" onclick="adjustCount('${f.key}', -1)" aria-label="1 감소"><i class="ph-bold ph-minus"></i></button>
+                        <input class="cval" type="number" inputmode="numeric" value="${currentData[f.key] || 0}" onchange="setDirectCount('${f.key}', this.value)" onfocus="this.select()" />
+                        <button class="cbtn plus" onclick="adjustCount('${f.key}', 1)" aria-label="1 증가"><i class="ph-bold ph-plus"></i></button>
+                        <button class="cbtn" onclick="adjustCount('${f.key}', 5)">+5</button>
+                    </div>
+                </div>`).join('');
+
+            const s1 = appState.attendance.att1;
+            const s2 = appState.attendance.att2;
+            const s3 = appState.attendance.att3;
+            const sub1 = getServiceSubtotal('att1');
+            const sub2 = getServiceSubtotal('att2');
+            const sub3 = getServiceSubtotal('att3');
+            const grand = sub1 + sub2 + sub3;
+
+            const dateStr = document.getElementById('currentDateText').textContent;
+            document.getElementById('attendanceSummaryPreview').textContent =
+                `[예배부 출석체크] ${dateStr}\n` +
+                `• 1부: ${sub1}명 (남자 ${s1.male} / 여자 ${s1.female} / 인터넷 ${s1.broadcast})\n` +
+                `• 2부: ${sub2}명 (남자 ${s2.male} / 여자 ${s2.female} / 인터넷 ${s2.broadcast})\n` +
+                `• 오후: ${sub3}명 (남자 ${s3.male} / 여자 ${s3.female} / 인터넷 ${s3.broadcast})\n` +
+                `▶ 총계: ${grand}명 (방송실, 성가대 포함, 인터넷 예배 포함)`;
+        }
+
+        function resetAttendance() {
+            if (!confirm('1부·2부·오후 출석 인원을 모두 0으로 초기화할까요?')) return;
+            appState.attendance = {
+                att1: { male: 0, female: 0, broadcast: 0 },
+                att2: { male: 0, female: 0, broadcast: 0 },
+                att3: { male: 0, female: 0, broadcast: 0 }
+            };
+            saveState();
+            renderAttendanceModal();
+            showToast('출석 인원이 모두 0으로 초기화되었습니다.', 'ph-arrow-counter-clockwise');
+        }
+
+        function legacyCopy(text) {
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            textarea.select();
+            let ok = false;
+            try { ok = document.execCommand('copy'); } catch (e) { }
+            document.body.removeChild(textarea);
+            return ok;
+        }
+
+        async function copyAttendanceReport() {
+            const text = document.getElementById('attendanceSummaryPreview').textContent;
+            let ok = false;
+            try {
+                if (navigator.clipboard && window.isSecureContext) {
+                    await navigator.clipboard.writeText(text);
+                    ok = true;
+                }
+            } catch (e) { }
+            if (!ok) ok = legacyCopy(text);
+            showToast(ok ? '출석체크 내역이 복사되었습니다!' : '복사에 실패했습니다.', ok ? 'ph-copy' : 'ph-warning-circle');
+        }
+
+        // 출석 집계표 텍스트 생성
+        function generateAttendanceReportContent() {
+            const srvMap = { att1: '1부예배', att2: '2부예배', att3: '오후예배' };
+            const curTab = appState.currentAttTab || 'att1';
+            const srvTitle = srvMap[curTab] || '1부예배';
+            const curData = appState.attendance[curTab] || { male: 0, female: 0, broadcast: 0 };
+            const maleCnt = curData.male || 0;
+            const femaleCnt = curData.female || 0;
+            const internetCnt = curData.broadcast || 0;
+            const subTotal = maleCnt + femaleCnt + internetCnt;
+
+            const now = new Date();
+            const y = now.getFullYear();
+            const m = String(now.getMonth() + 1).padStart(2, '0');
+            const d = String(now.getDate()).padStart(2, '0');
+            const dateStr = `${y}-${m}-${d}`;
+            const fileName = `${dateStr}-${srvTitle}.txt`;
+
+            const days = ['일', '월', '화', '수', '목', '금', '토'];
+            const dayOfWeek = days[now.getDay()];
+            const timeStr = now.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+            const fileContent =
+                `========================================
+성광교회 ${srvTitle} 출석 집계표
+========================================
+■ 일시: ${dateStr} (${dayOfWeek}요일)
+■ 예배: ${srvTitle}
+■ 기록시각: ${timeStr}
+
+----------------------------------------
+[인원 현황]
+• 남자: ${maleCnt}명 (방송실, 성가대 포함)
+• 여자: ${femaleCnt}명 (방송실, 성가대 포함)
+• 인터넷: ${internetCnt}명 (인터넷 예배)
+----------------------------------------
+▶ 총 인원 합계: ${subTotal}명
+========================================
+`;
+            return { srvTitle, dateStr, fileName, fileContent, subTotal };
+        }
+
+        // 출석 집계표 파일 구글 드라이브 (\예배부 데이터) 업로드
+        async function uploadAttendanceReportToDrive(fileName, fileContent) {
+            const webhookUrl = (localStorage.getItem(DRIVE_WEBHOOK_KEY) || '').trim();
+            if (!webhookUrl) {
+                return { success: false, needConfig: true };
+            }
+
+            try {
+                const utf8Bytes = encodeURIComponent(fileContent).replace(/%([0-9A-F]{2})/g, (match, p1) => String.fromCharCode('0x' + p1));
+                const base64Data = btoa(utf8Bytes);
+                const res = await fetch(webhookUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({
+                        type: 'attendance',
+                        subFolder: '출석',
+                        text: fileContent,
+                        base64: base64Data,
+                        mimeType: 'text/plain;charset=utf-8',
+                        fileName: fileName
+                    })
+                });
+
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                const data = await res.json();
+                return data;
+            } catch (err) {
+                console.error('Drive attendance upload error:', err);
+                return { success: false, error: err.message };
+            }
+        }
+
+        // 브라우저 파일 로컬 다운로드 트리거
+        function downloadAttendanceTextFile(fileName, fileContent) {
+            try {
+                const blob = new Blob([fileContent], { type: 'text/plain;charset=utf-8' });
+                const blobUrl = URL.createObjectURL(blob);
+                const dlLink = document.createElement('a');
+                dlLink.href = blobUrl;
+                dlLink.download = fileName;
+                document.body.appendChild(dlLink);
+                dlLink.click();
+                document.body.removeChild(dlLink);
+                URL.revokeObjectURL(blobUrl);
+                return true;
+            } catch (e) {
+                console.error('Download error:', e);
+                return false;
+            }
+        }
+
+        // 드라이브에만 즉시 파일 기록하는 버튼 핸들러
+        async function saveAttendanceFileToDriveOnly() {
+            const { fileName, fileContent } = generateAttendanceReportContent();
+            const webhookUrl = (localStorage.getItem(DRIVE_WEBHOOK_KEY) || '').trim();
+
+            if (!webhookUrl) {
+                alert('구글 드라이브 웹 앱 URL이 설정되지 않았습니다.\n설정 창에서 URL을 먼저 등록해 주세요.');
+                openDriveConfigModal();
+                return;
+            }
+
+            showToast(`${fileName} 드라이브(\예배부 데이터\출석)에 기록 중...`, 'ph-spinner-gap spin');
+            const res = await uploadAttendanceReportToDrive(fileName, fileContent);
+            if (res && res.success) {
+                showToast(`${fileName} 드라이브(\예배부 데이터\출석) 기록 완료!`, 'ph-cloud-check');
+                if (res.viewUrl) {
+                    const box = document.getElementById('attDriveFileLinkBox');
+                    const link = document.getElementById('attDriveFileLink');
+                    if (box && link) {
+                        link.href = res.viewUrl;
+                        box.classList.remove('hidden');
+                    }
+                }
+            } else {
+                showToast('드라이브 기록 실패: ' + (res.error || '연결 확인 필요'), 'ph-warning-circle');
+            }
+        }
+
+        // 출석체크 완료 및 [날짜-x부예배] 파일 생성 & 드라이브/기기 저장
+        async function markAttendanceTaskDone() {
+            const srv = appState.currentService;
+            if (!appState.checkedByService[srv]) appState.checkedByService[srv] = {};
+            const attItem = SPREADSHEET_ITEMS.find(i => i.actionType === 'attendanceModal');
+            if (attItem) appState.checkedByService[srv][attItem.id] = true;
+
+            const { fileName, fileContent } = generateAttendanceReportContent();
+
+            // 1. 기기 로컬 파일 다운로드
+            downloadAttendanceTextFile(fileName, fileContent);
+
+            // 2. 구글 드라이브 (\예배부 데이터) 파일 기록
+            const webhookUrl = (localStorage.getItem(DRIVE_WEBHOOK_KEY) || '').trim();
+            if (webhookUrl) {
+                showToast(`${fileName} 드라이브(\예배부 데이터)에 기록 중...`, 'ph-spinner-gap spin');
+                uploadAttendanceReportToDrive(fileName, fileContent).then(res => {
+                    if (res && res.success) {
+                        showToast(`${fileName} 드라이브(\예배부 데이터\출석)에 안전하게 기록되었습니다!`, 'ph-cloud-check');
+                    } else {
+                        showToast('드라이브 기록 실패 (기기 다운로드 완료)', 'ph-warning-circle');
+                    }
+                });
+            } else {
+                showToast(`${fileName} 기기에 저장되었습니다 (드라이브 미연동)`, 'ph-file-text');
+            }
+
+            closeSheet('attendanceModal');
+            afterCheckChange();
+            buzz([20, 50, 20]);
+        }
+        // ==========================================
+        // 사진 첨부 및 구글 드라이브 연동 모듈
+        // ==========================================
+        const DRIVE_WEBHOOK_KEY = 'CHURCH_WORSHIP_DRIVE_WEBHOOK_URL';
+        const PHOTO_DB_NAME = 'ChurchWorshipPhotoDB';
+        const PHOTO_STORE_NAME = 'photos';
+        const PHOTO_DB_VERSION = 1;
+
+        let photoDB = null;
+        let photoCache = {}; // { [itemId]: { count: number, latestThumb: string } }
+        let currentPhotoItemId = null;
+        let activeViewerDriveUrl = null;
+
+        // IndexedDB 초기화
+        function initPhotoDB() {
+            return new Promise((resolve) => {
+                if (!window.indexedDB) {
+                    console.warn('IndexedDB not supported in this browser.');
+                    resolve(null);
+                    return;
+                }
+                const request = indexedDB.open(PHOTO_DB_NAME, PHOTO_DB_VERSION);
+                request.onupgradeneeded = (e) => {
+                    const db = e.target.result;
+                    if (!db.objectStoreNames.contains(PHOTO_STORE_NAME)) {
+                        const store = db.createObjectStore(PHOTO_STORE_NAME, { keyPath: 'id' });
+                        store.createIndex('itemId', 'itemId', { unique: false });
+                        store.createIndex('createdAt', 'createdAt', { unique: false });
+                    }
+                };
+                request.onsuccess = (e) => {
+                    photoDB = e.target.result;
+                    resolve(photoDB);
+                };
+                request.onerror = (e) => {
+                    console.error('IndexedDB open error:', e);
+                    resolve(null);
+                };
+            });
+        }
+
+        // 특정 항목의 사진 목록 가져오기
+        function getPhotosByItemId(itemId) {
+            return new Promise((resolve) => {
+                if (!photoDB) { resolve([]); return; }
+                try {
+                    const tx = photoDB.transaction(PHOTO_STORE_NAME, 'readonly');
+                    const store = tx.objectStore(PHOTO_STORE_NAME);
+                    const index = store.index('itemId');
+                    const req = index.getAll(itemId);
+                    req.onsuccess = () => {
+                        const list = req.result || [];
+                        list.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+                        resolve(list);
+                    };
+                    req.onerror = () => resolve([]);
+                } catch (e) {
+                    resolve([]);
+                }
+            });
+        }
+
+        // 사진 1건 저장/수정
+        function savePhotoRecord(record) {
+            return new Promise((resolve) => {
+                if (!photoDB) { resolve(false); return; }
+                try {
+                    const tx = photoDB.transaction(PHOTO_STORE_NAME, 'readwrite');
+                    const store = tx.objectStore(PHOTO_STORE_NAME);
+                    const req = store.put(record);
+                    req.onsuccess = () => resolve(true);
+                    req.onerror = () => resolve(false);
+                } catch (e) {
+                    resolve(false);
+                }
+            });
+        }
+
+        // 사진 삭제
+        function deletePhotoRecord(id) {
+            return new Promise((resolve) => {
+                if (!photoDB) { resolve(false); return; }
+                try {
+                    const tx = photoDB.transaction(PHOTO_STORE_NAME, 'readwrite');
+                    const store = tx.objectStore(PHOTO_STORE_NAME);
+                    const req = store.delete(id);
+                    req.onsuccess = () => resolve(true);
+                    req.onerror = () => resolve(false);
+                } catch (e) {
+                    resolve(false);
+                }
+            });
+        }
+
+        // 모든 사진 캐시 재구축
+        function refreshPhotoCache() {
+            return new Promise((resolve) => {
+                if (!photoDB) { resolve(); return; }
+                try {
+                    const tx = photoDB.transaction(PHOTO_STORE_NAME, 'readonly');
+                    const store = tx.objectStore(PHOTO_STORE_NAME);
+                    const req = store.getAll();
+                    req.onsuccess = () => {
+                        const all = req.result || [];
+                        const cache = {};
+                        all.forEach(p => {
+                            if (!cache[p.itemId]) {
+                                cache[p.itemId] = { count: 0, latestThumb: p.dataUrl, latestTime: p.createdAt };
+                            }
+                            cache[p.itemId].count += 1;
+                            if (new Date(p.createdAt) >= new Date(cache[p.itemId].latestTime)) {
+                                cache[p.itemId].latestThumb = p.dataUrl;
+                                cache[p.itemId].latestTime = p.createdAt;
+                            }
+                        });
+                        photoCache = cache;
+                        resolve();
+                    };
+                    req.onerror = () => resolve();
+                } catch (e) {
+                    resolve();
+                }
+            });
+        }
+
+        // 이미지 압축 (최대 해상도 1600px, JPEG 0.82)
+        function compressImage(file, maxWidth = 1600, quality = 0.82) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        let w = img.width;
+                        let h = img.height;
+                        if (w > maxWidth || h > maxWidth) {
+                            if (w > h) {
+                                h = Math.round((h * maxWidth) / w);
+                                w = maxWidth;
+                            } else {
+                                w = Math.round((w * maxWidth) / h);
+                                h = maxWidth;
+                            }
+                        }
+                        const canvas = document.createElement('canvas');
+                        canvas.width = w;
+                        canvas.height = h;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, w, h);
+                        const dataUrl = canvas.toDataURL('image/jpeg', quality);
+                        resolve(dataUrl);
+                    };
+                    img.onerror = () => reject(new Error('이미지 로드에 실패했습니다.'));
+                    img.src = e.target.result;
+                };
+                reader.onerror = () => reject(new Error('파일 읽기에 실패했습니다.'));
+                reader.readAsDataURL(file);
+            });
+        }
+
+        // 구글 드라이브 업로드
+        async function uploadPhotoToDrive(photoRecord) {
+            const webhookUrl = (localStorage.getItem(DRIVE_WEBHOOK_KEY) || '').trim();
+            if (!webhookUrl) return false;
+
+            try {
+                const payload = {
+                    type: 'photo',
+                    subFolder: '사진',
+                    base64: photoRecord.dataUrl,
+                    mimeType: 'image/jpeg',
+                    fileName: photoRecord.fileName
+                };
+
+                const res = await fetch(webhookUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                const data = await res.json();
+                if (data.success) {
+                    photoRecord.synced = true;
+                    photoRecord.driveFileId = data.fileId;
+                    photoRecord.driveViewUrl = data.viewUrl;
+                    photoRecord.syncError = null;
+                    await savePhotoRecord(photoRecord);
+                    return true;
+                } else {
+                    photoRecord.syncError = data.error || '업로드 오류';
+                    await savePhotoRecord(photoRecord);
+                    return false;
+                }
+            } catch (err) {
+                console.error('Drive upload failed:', err);
+                photoRecord.syncError = err.message;
+                await savePhotoRecord(photoRecord);
+                return false;
+            }
+        }
+
+        // 사진 모달 열기
+        async function openPhotoModal(itemId) {
+            currentPhotoItemId = itemId;
+            const item = SPREADSHEET_ITEMS.find(i => i.id === itemId);
+            if (!item) return;
+
+            document.getElementById('photoModalCat').textContent = `${item.code}. ${item.category}`;
+            document.getElementById('photoItemCode').textContent = `${item.code}번 작업`;
+            document.getElementById('photoItemText').textContent = item.text;
+
+            updateDriveBannerStatus();
+            await renderPhotoModalList();
+            openSheet('photoModal');
+        }
+
+        function closePhotoModal() {
+            closeSheet('photoModal');
+            currentPhotoItemId = null;
+            renderChecklist();
+        }
+
+        function updateDriveBannerStatus() {
+            const url = (localStorage.getItem(DRIVE_WEBHOOK_KEY) || '').trim();
+            const bannerInfo = document.getElementById('driveBannerStatus');
+            const bannerText = document.getElementById('driveBannerText');
+            const driveIcon = document.getElementById('driveStatusIcon');
+            const bottomDriveBtn = document.getElementById('bottomBtn-drive');
+
+            if (url) {
+                if (bannerInfo) bannerInfo.className = 'drive-status-info connected';
+                if (bannerText) bannerText.textContent = '구글 드라이브 (\\예배부 데이터\\사진) 연동 중';
+                if (driveIcon) driveIcon.style.color = '#10b981';
+                if (bottomDriveBtn) {
+                    bottomDriveBtn.style.color = '#059669';
+                    bottomDriveBtn.title = '구글 드라이브 (\\예배부 데이터) 연동됨';
+                }
+            } else {
+                if (bannerInfo) bannerInfo.className = 'drive-status-info disconnected';
+                if (bannerText) bannerText.textContent = '구글 드라이브 미연동 (기기 로컬에 보관)';
+                if (driveIcon) driveIcon.style.color = 'inherit';
+                if (bottomDriveBtn) {
+                    bottomDriveBtn.style.color = '';
+                    bottomDriveBtn.title = '구글 드라이브 미연동 (클릭하여 설정)';
+                }
+            }
+        }
+
+        // 사진 모달 목록 렌더링
+        async function renderPhotoModalList() {
+            if (!currentPhotoItemId) return;
+            const photos = await getPhotosByItemId(currentPhotoItemId);
+            const container = document.getElementById('photoListContainer');
+            document.getElementById('photoCountBadge').textContent = photos.length;
+
+            if (photos.length === 0) {
+                container.innerHTML = `
+                    <div class="photo-empty-hint">
+                        <i class="ph-bold ph-camera"></i>
+                        아직 첨부된 사진이 없습니다.<br>
+                        위의 [새 사진 찍기] 또는 [사진 첨부하기]를 눌러보세요!
+                    </div>`;
+                return;
+            }
+
+            container.innerHTML = photos.map(p => {
+                const date = new Date(p.createdAt);
+                const timeStr = `${date.getMonth() + 1}월 ${date.getDate()}일 ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+
+                let statusHtml = '';
+                if (p.synced && p.driveViewUrl) {
+                    statusHtml = `<span class="photo-card-status synced"><i class="ph-bold ph-cloud-check"></i>\예배부 데이터\사진 저장됨</span>`;
+                } else if (p.isUploading) {
+                    statusHtml = `<span class="photo-card-status syncing"><i class="ph-bold ph-spinner-gap spin"></i>드라이브 저장 중...</span>`;
+                } else {
+                    statusHtml = `<span class="photo-card-status local"><i class="ph-bold ph-device-mobile"></i>기기 보관</span>`;
+                }
+
+                const driveActionBtn = (p.synced && p.driveViewUrl)
+                    ? `<a class="photo-act-btn view-drive" href="${esc(p.driveViewUrl)}" target="_blank" rel="noopener noreferrer" title="구글 드라이브에서 열기"><i class="ph-bold ph-arrow-square-out"></i>드라이브</a>`
+                    : '';
+
+                return `
+                    <div class="photo-card">
+                        <div class="photo-card-img-wrap" onclick="openPhotoViewer('${p.id}')">
+                            <img class="photo-card-img" src="${p.dataUrl}" alt="첨부 사진" />
+                        </div>
+                        <div class="photo-card-body">
+                            <span class="photo-card-time">${timeStr}</span>
+                            ${statusHtml}
+                            <div class="photo-card-actions">
+                                <button class="photo-act-btn del" onclick="confirmDeletePhoto('${p.id}')"><i class="ph-bold ph-trash"></i>삭제</button>
+                                ${driveActionBtn}
+                            </div>
+                        </div>
+                    </div>`;
+            }).join('');
+        }
+
+        // 사진 촬영 및 선택 트리거
+        function triggerCamera() {
+            document.getElementById('cameraInput').click();
+        }
+
+        function triggerGallery() {
+            document.getElementById('galleryInput').click();
+        }
+
+        // 파일 선택 처리
+        async function handleFileSelected(files) {
+            if (!files || !files.length || !currentPhotoItemId) return;
+
+            const item = SPREADSHEET_ITEMS.find(i => i.id === currentPhotoItemId);
+            const total = files.length;
+            showToast(`${total}장의 사진을 준비 중입니다...`, 'ph-spinner-gap spin');
+
+            const now = new Date();
+            const dateStr = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
+            const timeStr = `${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}${String(now.getSeconds()).padStart(2, '0')}`;
+            const srvName = SERVICE_NAMES[appState.currentService] || '예배';
+
+            for (let i = 0; i < total; i++) {
+                const file = files[i];
+                try {
+                    const compressedDataUrl = await compressImage(file, 1600, 0.82);
+                    const cleanText = (item ? item.text : '작업').replace(/[\/\:*?"<>|]/g, '_').substring(0, 15);
+                    const fileName = `예배부_${srvName}_${item ? item.code : ''}_${cleanText}_${dateStr}_${timeStr}_${i + 1}.jpg`;
+
+                    const record = {
+                        id: 'photo_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
+                        itemId: currentPhotoItemId,
+                        itemText: item ? item.text : '',
+                        itemCode: item ? item.code : '',
+                        service: appState.currentService,
+                        date: dateStr,
+                        fileName: fileName,
+                        dataUrl: compressedDataUrl,
+                        createdAt: new Date().toISOString(),
+                        synced: false,
+                        driveFileId: null,
+                        driveViewUrl: null,
+                        isUploading: false
+                    };
+
+                    await savePhotoRecord(record);
+                    await refreshPhotoCache();
+                    await renderPhotoModalList();
+                    renderChecklist();
+
+                    // 구글 드라이브 URL이 설정되어 있다면 즉시 비동기 업로드 진행
+                    const webhookUrl = (localStorage.getItem(DRIVE_WEBHOOK_KEY) || '').trim();
+                    if (webhookUrl) {
+                        record.isUploading = true;
+                        renderPhotoModalList();
+                        uploadPhotoToDrive(record).then(success => {
+                            record.isUploading = false;
+                            renderPhotoModalList();
+                            if (success) {
+                                showToast(`구글 드라이브 (\예배부 데이터\사진) 저장 완료!`, 'ph-cloud-check');
+                            }
+                        });
+                    }
+                } catch (e) {
+                    console.error('Photo save error:', e);
+                    showToast('사진 처리에 실패했습니다.', 'ph-warning-circle');
+                }
+            }
+
+            // 파일 인풋 초기화
+            document.getElementById('cameraInput').value = '';
+            document.getElementById('galleryInput').value = '';
+            buzz([15, 30]);
+            showToast(`${total}장의 사진이 첨부되었습니다!`, 'ph-camera');
+        }
+
+        // 사진 삭제
+        async function confirmDeletePhoto(photoId) {
+            if (!confirm('이 사진을 삭제하시겠습니까?')) return;
+            await deletePhotoRecord(photoId);
+            await refreshPhotoCache();
+            await renderPhotoModalList();
+            renderChecklist();
+            showToast('사진이 삭제되었습니다.', 'ph-trash');
+        }
+
+        // 사진 확대 뷰어
+        async function openPhotoViewer(photoId) {
+            if (!photoDB) return;
+            const photos = await getPhotosByItemId(currentPhotoItemId);
+            const p = photos.find(item => item.id === photoId);
+            if (!p) return;
+
+            document.getElementById('viewerImage').src = p.dataUrl;
+            document.getElementById('viewerTitle').textContent = p.fileName || '사진 보기';
+
+            const driveBtn = document.getElementById('viewerDriveBtn');
+            if (p.synced && p.driveViewUrl) {
+                driveBtn.href = p.driveViewUrl;
+                driveBtn.classList.remove('hidden');
+            } else {
+                driveBtn.classList.add('hidden');
+            }
+
+            document.getElementById('photoViewerModal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closePhotoViewer() {
+            document.getElementById('photoViewerModal').classList.add('hidden');
+            if (!document.querySelector('.backdrop:not(.hidden)')) {
+                document.body.style.overflow = '';
+            }
+        }
+
+        // 구글 드라이브 설정 모달
+        function openDriveConfigModal() {
+            const savedUrl = localStorage.getItem(DRIVE_WEBHOOK_KEY) || '';
+            document.getElementById('driveWebhookInput').value = savedUrl;
+            openSheet('driveConfigModal');
+        }
+
+        function closeDriveConfigModal() {
+            closeSheet('driveConfigModal');
+            updateDriveBannerStatus();
+        }
+
+        function saveDriveWebhookUrl() {
+            const val = document.getElementById('driveWebhookInput').value.trim();
+            localStorage.setItem(DRIVE_WEBHOOK_KEY, val);
+            updateDriveBannerStatus();
+            showToast('구글 드라이브 설정이 저장되었습니다!', 'ph-check-circle');
+            closeDriveConfigModal();
+        }
+
+        async function testDriveConnection() {
+            const val = document.getElementById('driveWebhookInput').value.trim();
+            if (!val) {
+                alert('웹 앱 URL을 입력해 주세요.');
+                return;
+            }
+            showToast('드라이브 연결 테스트 중...', 'ph-spinner-gap spin');
+            try {
+                const res = await fetch(val + (val.includes('?') ? '&' : '?') + 'test=1');
+                const data = await res.json();
+                if (data.status === 'ok') {
+                    showToast('성공! 구글 드라이브 (\예배부 데이터) 연동 완료', 'ph-check-circle');
+                } else {
+                    showToast('연결 성공 (응답 확인 완료)', 'ph-check-circle');
+                }
+            } catch (err) {
+                showToast('연결 확인: URL 및 배포 권한(모든 사용자)을 점검하세요.', 'ph-warning-circle');
+            }
+        }
+
+        function copyGasCode() {
+            const code = document.getElementById('gasScriptCode').textContent;
+            let ok = false;
+            try {
+                if (navigator.clipboard && window.isSecureContext) {
+                    navigator.clipboard.writeText(code);
+                    ok = true;
+                }
+            } catch (e) { }
+            if (!ok) ok = legacyCopy(code);
+            showToast(ok ? 'Apps Script 코드가 복사되었습니다!' : '복사에 실패했습니다.', ok ? 'ph-copy' : 'ph-warning-circle');
+        }
+
+        function openOfferingManualModal() { openSheet('offeringModal'); }
+        function closeOfferingManualModal() { closeSheet('offeringModal'); }
+
+        function openResetModal() {
+            const name = SERVICE_NAMES[appState.currentService];
+            document.getElementById('resetModalTitle').textContent = `${name} 초기화`;
+            document.getElementById('resetModalDesc').textContent = `${name}의 체크 표시를 모두 해제할까요?`;
+            openSheet('resetModal');
+        }
+
+        function closeResetModal() { closeSheet('resetModal'); }
+
+        function confirmResetService() {
+            appState.checkedByService[appState.currentService] = {};
+            wasComplete = false;
+            saveState();
+            closeResetModal();
+            renderAll();
+            showToast(`${SERVICE_NAMES[appState.currentService]} 항목이 초기화되었습니다.`, 'ph-arrow-counter-clockwise');
+        }
+
+        // 체크 기록은 그대로 두고 구글 시트의 최신 목록만 다시 불러옴
+        async function refreshSheetData() {
+            const btn = document.getElementById('refreshBtn');
+            const icon = btn.querySelector('i');
+            btn.disabled = true;
+            icon.className = 'ph-bold ph-spinner-gap spin';
+            showToast('구글 시트에서 최신 목록을 불러오는 중...', 'ph-cloud-arrow-down');
+            const ok = await loadSheetData(true);
+            wasComplete = isServiceComplete();
+            btn.disabled = false;
+            icon.className = 'ph-bold ph-cloud-arrow-down';
+            if (ok) showToast(`최신 목록 ${SPREADSHEET_ITEMS.length}개를 불러왔습니다.`, 'ph-cloud-check');
+            else showToast('시트 연결에 실패해 저장된 목록으로 표시합니다.', 'ph-wifi-slash');
+        }
+
+        let toastTimer = null;
+        function showToast(msg, icon) {
+            const toast = document.getElementById('toast');
+            toast.querySelector('i').className = `ph-fill ${icon || 'ph-check-circle'}`;
+            document.getElementById('toastMsg').textContent = msg;
+            toast.classList.add('hidden');
+            void toast.offsetWidth; // 애니메이션 재시작
+            toast.classList.remove('hidden');
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => toast.classList.add('hidden'), 2400);
+        }
+
+        function renderAll() {
+            renderHeaderAndTabs();
+            renderChecklist();
+        }
+
+
+        document.addEventListener('keydown', e => {
+            if (e.key !== 'Escape') return;
+            if (!document.getElementById('photoViewerModal').classList.contains('hidden')) closePhotoViewer();
+            else if (!document.getElementById('photoModal').classList.contains('hidden')) closePhotoModal();
+            else if (!document.getElementById('driveConfigModal').classList.contains('hidden')) closeDriveConfigModal();
+            else if (!document.getElementById('attendanceModal').classList.contains('hidden')) closeAttendanceModal();
+            else if (!document.getElementById('offeringModal').classList.contains('hidden')) closeOfferingManualModal();
+            else if (!document.getElementById('resetModal').classList.contains('hidden')) closeResetModal();
+        });
+
+        window.onload = async function () {
+            loadState();
+            updateDateDisplay();
+            await initPhotoDB();
+            await refreshPhotoCache();
+            updateDriveBannerStatus();
+            renderHeaderAndTabs();
+            loadSheetData().then(() => { wasComplete = isServiceComplete(); });
+        };
+    </script>
+</body>
+
+</html>
