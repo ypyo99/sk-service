@@ -1171,6 +1171,79 @@
             box-shadow: var(--shadow-sm);
         }
 
+        
+        /* 맨 위로 가기 플로팅 버튼 */
+        .scroll-top-btn {
+            position: fixed;
+            right: 18px;
+            bottom: calc(78px + var(--safe-b));
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: color-mix(in srgb, var(--surface) 94%, transparent);
+            color: var(--ink);
+            border: 1.5px solid var(--line);
+            box-shadow: var(--shadow-lg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            display: grid;
+            place-items: center;
+            font-size: 20px;
+            cursor: pointer;
+            z-index: 35;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(12px) scale(0.9);
+            transition: opacity .2s, transform .2s, visibility .2s, background .15s;
+        }
+
+        .scroll-top-btn.visible {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0) scale(1);
+        }
+
+        .scroll-top-btn:active {
+            transform: scale(0.92);
+            background: var(--surface-2);
+        }
+
+        /* 사진 뷰어 좌우 내비게이션 버튼 */
+        .viewer-content {
+            position: relative;
+        }
+
+        .viewer-nav-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, .55);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, .25);
+            display: grid;
+            place-items: center;
+            font-size: 24px;
+            cursor: pointer;
+            z-index: 10;
+            transition: background .15s, transform .1s;
+        }
+
+        .viewer-nav-btn:active {
+            transform: translateY(-50%) scale(0.92);
+            background: rgba(0, 0, 0, .8);
+        }
+
+        .viewer-nav-btn.prev {
+            left: 12px;
+        }
+
+        .viewer-nav-btn.next {
+            right: 12px;
+        }
+
         /* Attendance */
         .att-tabs {
             display: grid;
@@ -2108,6 +2181,11 @@
         <div id="checklistContainer"></div>
     </main>
 
+    <!-- 맨 위로 가기 플로팅 버튼 -->
+    <button id="scrollTopBtn" class="scroll-top-btn" onclick="scrollToTop()" title="맨 위로 가기" aria-label="맨 위로 가기">
+        <i class="ph-bold ph-arrow-up"></i>
+    </button>
+
     <!-- Bottom Dock -->
     <nav class="dock">
         <div class="dock-inner">
@@ -2291,7 +2369,13 @@
                 onclick="closePhotoViewer()"><i class="ph-bold ph-x"></i></button>
         </div>
         <div class="viewer-content">
+            <button id="viewerPrevBtn" class="viewer-nav-btn prev" onclick="viewerPrevPhoto(event)" title="이전 사진" aria-label="이전 사진" style="display:none;">
+                <i class="ph-bold ph-caret-left"></i>
+            </button>
             <img id="viewerImage" src="" alt="확대 사진" />
+            <button id="viewerNextBtn" class="viewer-nav-btn next" onclick="viewerNextPhoto(event)" title="다음 사진" aria-label="다음 사진" style="display:none;">
+                <i class="ph-bold ph-caret-right"></i>
+            </button>
         </div>
         <div class="viewer-bottom">
             <a id="viewerDriveBtn" class="pill-btn green hidden" target="_blank" rel="noopener noreferrer"><i
@@ -2682,8 +2766,22 @@ function doGet(e) {
             appState.selectedCategory = code;
             saveState();
             renderAll();
-            const hero = document.querySelector('.hero');
-            if (window.scrollY > hero.offsetHeight) window.scrollTo({ top: hero.offsetHeight, behavior: 'smooth' });
+            setTimeout(() => {
+                if (code === 'ALL') {
+                    const hero = document.querySelector('.hero');
+                    if (hero && window.scrollY > hero.offsetHeight) {
+                        window.scrollTo({ top: hero.offsetHeight, behavior: 'smooth' });
+                    }
+                } else {
+                    const sec = document.getElementById(`cat-section-${code}`);
+                    if (sec) {
+                        const chipbar = document.querySelector('.chipbar');
+                        const offset = (chipbar ? chipbar.offsetHeight : 0) + 12;
+                        const topPos = sec.getBoundingClientRect().top + window.pageYOffset - offset;
+                        window.scrollTo({ top: Math.max(0, topPos), behavior: 'smooth' });
+                    }
+                }
+            }, 60);
         }
 
         function toggleFilterUnchecked() {
@@ -2847,7 +2945,7 @@ function doGet(e) {
                 const code = esc(cat.code);
 
                 html += `
-                    <section class="group ${allGroupDone ? 'all-done' : ''}" style="--c:${cat.color}">
+                    <section id="cat-section-${code}" class="group ${allGroupDone ? 'all-done' : ''}" style="--c:${cat.color}">
                         <div class="group-head">
                             <${isAll ? `button onclick="toggleGroupCollapse('${code}')"` : 'div'} class="gh-main">
                                 <span class="gh-code">${allGroupDone ? '<i class="ph-bold ph-check"></i>' : code}</span>
@@ -3710,15 +3808,31 @@ function doGet(e) {
             showToast('사진이 삭제되었습니다.', 'ph-trash');
         }
 
-        // 사진 확대 뷰어
-        async function openPhotoViewer(photoId) {
-            if (!photoDB) return;
-            const photos = await getPhotosByItemId(currentPhotoItemId);
-            const p = photos.find(item => item.id === photoId);
-            if (!p) return;
+        // 사진 확대 뷰어 (이전/다음 슬라이드 지원)
+        let currentViewerIndex = 0;
+        let currentViewerPhotos = [];
 
+        async function openPhotoViewer(photoId) {
+            if (!currentPhotoItemId) return;
+            currentViewerPhotos = await getPhotosByItemId(currentPhotoItemId);
+            currentViewerIndex = currentViewerPhotos.findIndex(item => item.id === photoId);
+            if (currentViewerIndex === -1) currentViewerIndex = 0;
+            updateViewerDisplay();
+            document.getElementById('photoViewerModal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function updateViewerDisplay() {
+            if (!currentViewerPhotos.length) return;
+            const p = currentViewerPhotos[currentViewerIndex];
             document.getElementById('viewerImage').src = p.dataUrl || p.driveViewUrl || p.thumbUrl;
-            document.getElementById('viewerTitle').textContent = p.fileName || '사진 보기';
+            document.getElementById('viewerTitle').textContent = `${p.fileName || '사진'} (${currentViewerIndex + 1}/${currentViewerPhotos.length})`;
+
+            const prevBtn = document.getElementById('viewerPrevBtn');
+            const nextBtn = document.getElementById('viewerNextBtn');
+            const showNav = currentViewerPhotos.length > 1;
+            if (prevBtn) prevBtn.style.display = showNav ? 'grid' : 'none';
+            if (nextBtn) nextBtn.style.display = showNav ? 'grid' : 'none';
 
             const driveBtn = document.getElementById('viewerDriveBtn');
             if (p.synced && p.driveViewUrl) {
@@ -3727,9 +3841,20 @@ function doGet(e) {
             } else {
                 driveBtn.classList.add('hidden');
             }
+        }
 
-            document.getElementById('photoViewerModal').classList.remove('hidden');
-            document.body.style.overflow = 'hidden';
+        function viewerPrevPhoto(e) {
+            if (e) e.stopPropagation();
+            if (currentViewerPhotos.length <= 1) return;
+            currentViewerIndex = (currentViewerIndex - 1 + currentViewerPhotos.length) % currentViewerPhotos.length;
+            updateViewerDisplay();
+        }
+
+        function viewerNextPhoto(e) {
+            if (e) e.stopPropagation();
+            if (currentViewerPhotos.length <= 1) return;
+            currentViewerIndex = (currentViewerIndex + 1) % currentViewerPhotos.length;
+            updateViewerDisplay();
         }
 
         function closePhotoViewer() {
@@ -3737,6 +3862,21 @@ function doGet(e) {
             if (!document.querySelector('.backdrop:not(.hidden)')) {
                 document.body.style.overflow = '';
             }
+        }
+
+        // 스크롤 감지 및 맨 위로 스크롤
+        window.addEventListener('scroll', () => {
+            const topBtn = document.getElementById('scrollTopBtn');
+            if (!topBtn) return;
+            if (window.scrollY > 260) {
+                topBtn.classList.add('visible');
+            } else {
+                topBtn.classList.remove('visible');
+            }
+        }, { passive: true });
+
+        function scrollToTop() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         // 구글 드라이브 설정 모달
@@ -3868,6 +4008,10 @@ function doGet(e) {
 
 
         document.addEventListener('keydown', e => {
+            if (!document.getElementById('photoViewerModal').classList.contains('hidden')) {
+                if (e.key === 'ArrowLeft') { viewerPrevPhoto(); return; }
+                if (e.key === 'ArrowRight') { viewerNextPhoto(); return; }
+            }
             if (e.key !== 'Escape') return;
             if (!document.getElementById('photoViewerModal').classList.contains('hidden')) closePhotoViewer();
             else if (!document.getElementById('photoModal').classList.contains('hidden')) closePhotoModal();
