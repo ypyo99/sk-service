@@ -470,10 +470,27 @@
         }
 
         .tile-code {
-            font-size: 12px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 20px;
+            height: 19px;
+            padding: 0 4px;
+            font-size: 11.5px;
             font-weight: 900;
-            color: var(--c);
             line-height: 1;
+            color: var(--c);
+            background: color-mix(in srgb, var(--c) 14%, #fff);
+            border: 1.2px solid color-mix(in srgb, var(--c) 60%, transparent);
+            border-radius: 5px;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+            flex-shrink: 0;
+        }
+
+        .tile.active .tile-code {
+            background: var(--c);
+            color: #fff;
+            border-color: #fff;
         }
 
         .tile-cnt {
