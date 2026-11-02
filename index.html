@@ -430,6 +430,14 @@
             -webkit-backdrop-filter: saturate(1.6) blur(14px);
         }
 
+        /* '전체' 선택 시 상단 고정 해제하여 스크롤 시 위로 사라지게 함 */
+        .chipbar.not-sticky {
+            position: relative;
+            top: auto;
+            backdrop-filter: none;
+            -webkit-backdrop-filter: none;
+        }
+
         .tiles {
             display: grid;
             grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -3201,15 +3209,18 @@ function deleteDrivePhoto(fileId, fileName) {
             renderAll();
             setTimeout(() => {
                 if (code === 'ALL') {
-                    const hero = document.querySelector('.hero');
-                    if (hero && window.scrollY > hero.offsetHeight) {
-                        window.scrollTo({ top: hero.offsetHeight, behavior: 'smooth' });
+                    // 전체 선택 시 항목버튼(chipbar) 위로 스크롤하여 사라지게 함
+                    const mainEl = document.querySelector('main');
+                    if (mainEl) {
+                        const topPos = mainEl.getBoundingClientRect().top + window.pageYOffset;
+                        window.scrollTo({ top: Math.max(0, topPos), behavior: 'smooth' });
                     }
                 } else {
                     const sec = document.getElementById(`cat-section-${code}`);
                     if (sec) {
                         const chipbar = document.querySelector('.chipbar');
-                        const offset = (chipbar ? chipbar.offsetHeight : 0) + 12;
+                        const isSticky = chipbar && !chipbar.classList.contains('not-sticky');
+                        const offset = (isSticky ? chipbar.offsetHeight : 0) + 12;
                         const topPos = sec.getBoundingClientRect().top + window.pageYOffset - offset;
                         window.scrollTo({ top: Math.max(0, topPos), behavior: 'smooth' });
                     }
@@ -3335,6 +3346,12 @@ function deleteDrivePhoto(fileId, fileName) {
                 tabsHtml += tileHtml(cat.code, esc(cat.code), cat.name, cat.color, done, catItems.length);
             });
             document.getElementById('categoryTabsBar').innerHTML = tabsHtml;
+
+            // 4-1. '전체' 선택 시 상단 고정 해제하여 스크롤 시 위로 사라지게 함
+            const chipbarEl = document.querySelector('.chipbar');
+            if (chipbarEl) {
+                chipbarEl.classList.toggle('not-sticky', appState.selectedCategory === 'ALL');
+            }
 
             // 5. 하단 버튼
             document.getElementById('bottomBtn-all').classList.toggle('active', appState.selectedCategory === 'ALL');
