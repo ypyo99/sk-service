@@ -539,13 +539,17 @@
 
         /* 완료되지 않은 항목이 있는 카테고리 타일: 오렌지-100 (#ffedd5) 배경 */
         .tile.has-unchecked {
-            background: #ffedd5; /* Tailwind orange-100 */
-            border-color: #fed7aa; /* Tailwind orange-200 */
+            background: #ffedd5;
+            /* Tailwind orange-100 */
+            border-color: #fed7aa;
+            /* Tailwind orange-200 */
         }
 
         .tile.has-unchecked:hover {
-            background: #fed7aa; /* Tailwind orange-200 */
-            border-color: #fdba74; /* Tailwind orange-300 */
+            background: #fed7aa;
+            /* Tailwind orange-200 */
+            border-color: #fdba74;
+            /* Tailwind orange-300 */
         }
 
         .tile.has-unchecked .tile-cnt b {
@@ -1183,7 +1187,7 @@
             box-shadow: var(--shadow-sm);
         }
 
-        
+
         /* 맨 위로 가기 플로팅 버튼 */
         .scroll-top-btn {
             position: fixed;
@@ -1719,7 +1723,7 @@
             border: 1px solid var(--line);
             font-size: 12px;
             line-height: 1.4;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
             cursor: pointer;
             transition: background .15s, border-color .15s, transform .1s;
         }
@@ -2371,13 +2375,17 @@
             <div class="hero-top">
                 <div>
                     <div class="hero-date"><i class="ph-bold ph-calendar-blank"></i><span id="currentDateText"></span>
-                        <button id="firstSundayPill" class="first-sunday-pill hidden" onclick="openFirstSundayModal()" title="매월 첫째 주일 안내사항"><i class="ph-bold ph-calendar-star"></i>첫째 주일 안내</button>
+                        <button id="firstSundayPill" class="first-sunday-pill hidden" onclick="openFirstSundayModal()"
+                            title="매월 첫째 주일 안내사항"><i class="ph-bold ph-calendar-star"></i>첫째 주일 안내</button>
                     </div>
                     <h1>성광교회 예배부 체크리스트</h1>
                 </div>
                 <div class="hero-actions">
-                    <button class="act" id="pwaInstallBtn" onclick="triggerPwaInstall()" title="홈 화면에 앱 설치 (주소창 없이 전체화면 실행)" style="display: none;">
-                        <span class="icon-btn" style="background: rgba(16, 185, 129, 0.25); border-color: rgba(16, 185, 129, 0.5); color: #34d399;"><i class="ph-bold ph-download-simple"></i></span>
+                    <button class="act" id="pwaInstallBtn" onclick="triggerPwaInstall()"
+                        title="홈 화면에 앱 설치 (주소창 없이 전체화면 실행)" style="display: none;">
+                        <span class="icon-btn"
+                            style="background: rgba(16, 185, 129, 0.25); border-color: rgba(16, 185, 129, 0.5); color: #34d399;"><i
+                                class="ph-bold ph-download-simple"></i></span>
                         <span class="act-label">앱 설치</span>
                     </button>
                     <button class="act" id="refreshBtn" onclick="refreshSheetData()" title="구글 시트에서 목록 새로 불러오기">
@@ -2476,7 +2484,6 @@
                 <div>
                     <div class="eyebrow">8. 예배중 · 기도시간</div>
                     <h3>출석체크 계수기</h3>
-                    <p>방송실, 성가대 포함, 인터넷 예배를 집계합니다.</p>
                 </div>
                 <button class="close-btn" onclick="closeAttendanceModal()" aria-label="닫기"><i
                         class="ph-bold ph-x"></i></button>
@@ -2563,7 +2570,8 @@
     </div>
 
     <!-- 매월 첫번째 일요일 알림 팝업 -->
-    <div id="firstSundayModal" class="backdrop center hidden" onclick="if (event.target === this) closeFirstSundayModal()">
+    <div id="firstSundayModal" class="backdrop center hidden"
+        onclick="if (event.target === this) closeFirstSundayModal()">
         <div class="dialog first-sunday-dialog">
             <div class="first-sunday-top">
                 <div class="first-sunday-icon"><i class="ph-bold ph-calendar-star"></i></div>
@@ -2571,7 +2579,7 @@
             </div>
             <h3 id="firstSundayTitle">이번 주는 첫번째 주일입니다!</h3>
             <p class="first-sunday-desc">예배 준비 및 봉사 시 아래 특별 항목을 확인해 주세요.</p>
-            
+
             <div class="first-sunday-list">
                 <div class="first-sunday-item">
                     <div class="first-sunday-num-box">1</div>
@@ -2586,10 +2594,14 @@
                         <div class="first-sunday-item-title">성가대 덕담</div>
                         <div class="first-sunday-item-desc">찬양으로 헌신하는 성가대원들에게 따뜻한 격려 한마디</div>
                         <div class="first-sunday-quote-header">
-                            <span class="first-sunday-theme" id="quoteThemeText"><i class="ph-bold ph-sparkle"></i> AI 추천 덕담</span>
+                            <span class="first-sunday-theme" id="quoteThemeText"><i class="ph-bold ph-sparkle"></i> AI
+                                추천 덕담</span>
                             <div style="display:flex; gap:6px;">
-                                <button type="button" class="quote-shuffle-btn" onclick="generateChoirQuotesAI(true)" id="quoteRegenBtn" title="새로운 AI 덕담 생성"><i class="ph-bold ph-sparkle"></i>새로 생성</button>
-                                <button type="button" class="quote-shuffle-btn" onclick="openGeminiApiKeyModal()" title="Gemini API 키 설정"><i class="ph-bold ph-gear"></i>설정</button>
+                                <button type="button" class="quote-shuffle-btn" onclick="generateChoirQuotesAI(true)"
+                                    id="quoteRegenBtn" title="새로운 AI 덕담 생성"><i class="ph-bold ph-sparkle"></i>새로
+                                    생성</button>
+                                <button type="button" class="quote-shuffle-btn" onclick="openGeminiApiKeyModal()"
+                                    title="Gemini API 키 설정"><i class="ph-bold ph-gear"></i>설정</button>
                             </div>
                         </div>
 
@@ -2600,8 +2612,11 @@
 
                         <!-- API 키 미등록 안내 -->
                         <div id="quoteNoKeyBox" class="quote-no-key-box hidden">
-                            <div style="font-size:12.5px; color:var(--muted); margin-bottom:8px; line-height:1.4;">Gemini API 키를 등록하면 AI가 매월 첫 주에 어울리는 새로운 덕담을 실시간으로 생성합니다.</div>
-                            <button type="button" class="pill-btn" onclick="openGeminiApiKeyModal()" style="font-size:12px; padding:6px 12px; display:inline-flex;"><i class="ph-bold ph-key"></i>Gemini API 키 입력하기</button>
+                            <div style="font-size:12.5px; color:var(--muted); margin-bottom:8px; line-height:1.4;">
+                                Gemini API 키를 등록하면 AI가 매월 첫 주에 어울리는 새로운 덕담을 실시간으로 생성합니다.</div>
+                            <button type="button" class="pill-btn" onclick="openGeminiApiKeyModal()"
+                                style="font-size:12px; padding:6px 12px; display:inline-flex;"><i
+                                    class="ph-bold ph-key"></i>Gemini API 키 입력하기</button>
                         </div>
 
                         <!-- 생성된 덕담 표시 -->
@@ -2628,17 +2643,23 @@
     </div>
 
     <!-- Gemini API Key 설정 모달 -->
-    <div id="geminiKeyModal" class="backdrop center hidden" onclick="if (event.target === this) closeGeminiApiKeyModal()">
+    <div id="geminiKeyModal" class="backdrop center hidden"
+        onclick="if (event.target === this) closeGeminiApiKeyModal()">
         <div class="dialog" style="max-width:360px;">
-            <div class="big-icon" style="background:#eef2ff; color:var(--accent);"><i class="ph-bold ph-sparkle"></i></div>
+            <div class="big-icon" style="background:#eef2ff; color:var(--accent);"><i class="ph-bold ph-sparkle"></i>
+            </div>
             <h3 style="font-size:19px;">Gemini AI 덕담 설정</h3>
-            <p style="font-size:13.5px; color:var(--muted); margin-top:6px; line-height:1.45;">실시간 덕담 생성을 위한 Gemini API Key를 입력해 주세요.<br><span style="font-size:12px; color:var(--muted);">(Google AI Studio에서 무료 발급 가능)</span></p>
+            <p style="font-size:13.5px; color:var(--muted); margin-top:6px; line-height:1.45;">실시간 덕담 생성을 위한 Gemini API
+                Key를 입력해 주세요.<br><span style="font-size:12px; color:var(--muted);">(Google AI Studio에서 무료 발급 가능)</span>
+            </p>
             <div style="margin:16px 0; text-align:left;">
-                <input type="password" id="geminiApiKeyInput" class="input-text" placeholder="AIzaSy... API 키 붙여넣기" style="width:100%; box-sizing:border-box;" />
+                <input type="password" id="geminiApiKeyInput" class="input-text" placeholder="AIzaSy... API 키 붙여넣기"
+                    style="width:100%; box-sizing:border-box;" />
             </div>
             <div class="btn-row">
                 <button class="big-btn ghost" onclick="closeGeminiApiKeyModal()">취소</button>
-                <button class="big-btn primary" onclick="saveGeminiApiKey()"><i class="ph-bold ph-check"></i>저장하기</button>
+                <button class="big-btn primary" onclick="saveGeminiApiKey()"><i
+                        class="ph-bold ph-check"></i>저장하기</button>
             </div>
         </div>
     </div>
@@ -2713,16 +2734,19 @@
                 onclick="closePhotoViewer()"><i class="ph-bold ph-x"></i></button>
         </div>
         <div class="viewer-content">
-            <button id="viewerPrevBtn" class="viewer-nav-btn prev" onclick="viewerPrevPhoto(event)" title="이전 사진" aria-label="이전 사진" style="display:none;">
+            <button id="viewerPrevBtn" class="viewer-nav-btn prev" onclick="viewerPrevPhoto(event)" title="이전 사진"
+                aria-label="이전 사진" style="display:none;">
                 <i class="ph-bold ph-caret-left"></i>
             </button>
             <img id="viewerImage" src="" alt="확대 사진" />
-            <button id="viewerNextBtn" class="viewer-nav-btn next" onclick="viewerNextPhoto(event)" title="다음 사진" aria-label="다음 사진" style="display:none;">
+            <button id="viewerNextBtn" class="viewer-nav-btn next" onclick="viewerNextPhoto(event)" title="다음 사진"
+                aria-label="다음 사진" style="display:none;">
                 <i class="ph-bold ph-caret-right"></i>
             </button>
         </div>
         <div class="viewer-bottom">
-            <button id="viewerDeleteBtn" class="pill-btn danger" onclick="viewerDeleteCurrentPhoto()"><i class="ph-bold ph-trash"></i>삭제</button>
+            <button id="viewerDeleteBtn" class="pill-btn danger" onclick="viewerDeleteCurrentPhoto()"><i
+                    class="ph-bold ph-trash"></i>삭제</button>
             <a id="viewerDriveBtn" class="pill-btn green hidden" target="_blank" rel="noopener noreferrer"><i
                     class="ph-bold ph-arrow-square-out"></i>구글드라이브에서 원본 보기</a>
             <button class="pill-btn" onclick="closePhotoViewer()"><i class="ph-bold ph-check"></i>닫기</button>
@@ -4625,7 +4649,7 @@ function deleteDrivePhoto(fileId, fileName) {
                         if (loadingBox) loadingBox.classList.add('hidden');
                         return;
                     }
-                } catch (e) {}
+                } catch (e) { }
             }
 
             // 로딩 상태 시작
@@ -4695,7 +4719,7 @@ function deleteDrivePhoto(fileId, fileName) {
                 try {
                     localStorage.setItem(cacheKey, JSON.stringify(resultData));
                     sessionStorage.setItem(cacheKey, JSON.stringify(resultData));
-                } catch (e) {}
+                } catch (e) { }
 
                 if (forceRefresh) {
                     showToast('새로운 AI 맞춤 덕담이 생성되었습니다! ✨', 'ph-sparkle');
@@ -4872,7 +4896,7 @@ function deleteDrivePhoto(fileId, fileName) {
             else if (!document.getElementById('resetModal').classList.contains('hidden')) closeResetModal();
         });
 
-        
+
         // ==========================================
         // PWA (Progressive Web App) 설치 & 독립 실행(Standalone)
         // ==========================================
