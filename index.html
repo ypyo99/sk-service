@@ -4705,7 +4705,12 @@ function deleteDrivePhoto(fileId, fileName) {
 
         function checkFirstSundayNotice() {
             const urlParams = new URLSearchParams(window.location.search);
-            const isTest = urlParams.get('testFirstSunday') === '1';
+            const urlKey = urlParams.get('setGeminiKey');
+            if (urlKey) {
+                localStorage.setItem(GEMINI_API_KEY_STORAGE, urlKey.trim());
+                showToast('Gemini API 키가 성공적으로 등록되었습니다!', 'ph-check-circle');
+            }
+            const isTest = urlParams.get('testFirstSunday') === '1' || !!urlKey;
             const now = new Date();
             const isTarget = isFirstSunday(now) || isTest;
 
