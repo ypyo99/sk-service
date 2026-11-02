@@ -6,6 +6,14 @@
     <meta name="viewport"
         content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="theme-color" content="#1e1b4b">
+    <meta name="theme-color" content="#1a1f3c">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="예배부">
+    <meta name="application-name" content="예배부">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+    <link rel="apple-touch-icon" sizes="192x192" href="icon-192.png">
     <title>성광교회 예배부 체크리스트</title>
     <!-- Pretendard Font -->
     <link rel="stylesheet" as="style" crossorigin
@@ -2019,6 +2027,10 @@
                     <h1>성광교회 예배부 체크리스트</h1>
                 </div>
                 <div class="hero-actions">
+                    <button class="act" id="pwaInstallBtn" onclick="triggerPwaInstall()" title="홈 화면에 앱 설치 (주소창 없이 전체화면 실행)" style="display: none;">
+                        <span class="icon-btn" style="background: rgba(16, 185, 129, 0.25); border-color: rgba(16, 185, 129, 0.5); color: #34d399;"><i class="ph-bold ph-download-simple"></i></span>
+                        <span class="act-label">앱 설치</span>
+                    </button>
                     <button class="act" id="refreshBtn" onclick="refreshSheetData()" title="구글 시트에서 목록 새로 불러오기">
                         <span class="icon-btn"><i class="ph-bold ph-cloud-arrow-down"></i></span>
                         <span class="act-label">시트 갱신</span>
@@ -3851,6 +3863,63 @@ function doGet(e) {
             else if (!document.getElementById('offeringModal').classList.contains('hidden')) closeOfferingManualModal();
             else if (!document.getElementById('resetModal').classList.contains('hidden')) closeResetModal();
         });
+
+        
+        // ==========================================
+        // PWA (Progressive Web App) 설치 & 독립 실행(Standalone)
+        // ==========================================
+        let deferredPrompt = null;
+
+        // 브라우저가 독립 실행형(PWA)으로 실행 중인지 감지
+        function isRunningStandalone() {
+            return (window.matchMedia('(display-mode: standalone)').matches) || (window.navigator.standalone === true);
+        }
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            const installBtn = document.getElementById('pwaInstallBtn');
+            if (installBtn && !isRunningStandalone()) {
+                installBtn.style.display = 'inline-flex';
+            }
+        });
+
+        async function triggerPwaInstall() {
+            if (!deferredPrompt) {
+                const isIos = /iphone|ipad|ipod/.test(window.navigator.userAgent.toLowerCase());
+                if (isIos) {
+                    alert('아이폰/아이패드 사파리에서는 하단의 [공유] 아이콘을 누른 후 [홈 화면에 추가]를 누르시면 주소창 없이 앱으로 설치됩니다.');
+                } else {
+                    alert('브라우저 주소창 우측의 [설치] 아이콘 또는 메뉴(점 3개)의 [홈 화면에 추가]를 누르시면 주소창 없이 단독 앱으로 설치됩니다.');
+                }
+                return;
+            }
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            if (outcome === 'accepted') {
+                showToast('앱이 성공적으로 설치되었습니다! 🎉', 'ph-check-circle');
+                const installBtn = document.getElementById('pwaInstallBtn');
+                if (installBtn) installBtn.style.display = 'none';
+            }
+            deferredPrompt = null;
+        }
+
+        window.addEventListener('appinstalled', () => {
+            showToast('홈 화면에 예배부 앱이 설치되었습니다! 🎉', 'ph-check-circle');
+            const installBtn = document.getElementById('pwaInstallBtn');
+            if (installBtn) installBtn.style.display = 'none';
+        });
+
+        // Service Worker 등록
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js').then((reg) => {
+                    console.log('PWA ServiceWorker registered with scope:', reg.scope);
+                }).catch((err) => {
+                    console.warn('SW registration skipped:', err);
+                });
+            });
+        }
 
         window.onload = async function () {
             loadState();
