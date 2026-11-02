@@ -927,11 +927,11 @@
         }
 
         .dock-inner {
-            max-width: 616px;
+            max-width: 540px;
             margin: 0 auto;
             pointer-events: auto;
             display: grid;
-            grid-template-columns: 1fr 1.25fr 1.15fr 1fr;
+            grid-template-columns: 1fr 1.35fr 1.15fr;
             gap: 6px;
             background: color-mix(in srgb, var(--surface) 92%, transparent);
             backdrop-filter: blur(16px);
@@ -2047,10 +2047,6 @@
             <button onclick="openOfferingManualModal()" class="dock-btn">
                 <i class="ph-bold ph-book-open-text"></i>
                 <span>사회자 부재 시</span>
-            </button>
-            <button onclick="openDriveConfigModal()" id="bottomBtn-drive" class="dock-btn" title="구글 드라이브 (\예배부 데이터) 연동 설정">
-                <i class="ph-bold ph-google-drive-logo" id="driveStatusIcon" style="font-size:24px;"></i>
-                <span>드라이브 연동</span>
             </button>
         </div>
     </nav>
