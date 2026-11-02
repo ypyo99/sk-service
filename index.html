@@ -1560,6 +1560,149 @@
             color: var(--accent);
         }
 
+        /* First Sunday Notice Modal */
+        .first-sunday-dialog {
+            max-width: 380px;
+            padding: 26px 20px 20px;
+            border: 1px solid var(--line);
+        }
+
+        .first-sunday-top {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .first-sunday-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 20px;
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            color: #d97706;
+            font-size: 30px;
+            margin: 0 auto 10px;
+            display: grid;
+            place-items: center;
+            box-shadow: 0 4px 12px rgba(217, 119, 6, 0.15);
+        }
+
+        .first-sunday-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 3px 10px;
+            border-radius: 999px;
+            background: #fff7ed;
+            color: #ea580c;
+            border: 1px solid #fed7aa;
+            font-size: 11.5px;
+            font-weight: 800;
+            letter-spacing: -0.2px;
+        }
+
+        .first-sunday-desc {
+            font-size: 13.5px;
+            color: var(--muted);
+            margin-top: 4px;
+            margin-bottom: 18px;
+            font-weight: 500;
+            line-height: 1.45;
+        }
+
+        .first-sunday-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            text-align: left;
+            margin-bottom: 20px;
+        }
+
+        .first-sunday-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 12px 14px;
+            background: var(--surface-2);
+            border: 1.5px solid var(--line);
+            border-radius: 16px;
+        }
+
+        .first-sunday-num-box {
+            width: 28px;
+            height: 28px;
+            border-radius: 8px;
+            background: var(--accent);
+            color: #fff;
+            display: grid;
+            place-items: center;
+            font-size: 14px;
+            font-weight: 900;
+            flex-shrink: 0;
+            box-shadow: 0 2px 4px rgba(79, 70, 229, 0.25);
+        }
+
+        .first-sunday-info {
+            flex: 1;
+        }
+
+        .first-sunday-item-title {
+            font-size: 15.5px;
+            font-weight: 800;
+            color: var(--ink);
+            line-height: 1.3;
+        }
+
+        .first-sunday-item-desc {
+            font-size: 12.5px;
+            color: var(--muted);
+            margin-top: 3px;
+            line-height: 1.4;
+        }
+
+        .first-sunday-confirm-btn {
+            width: 100%;
+            height: 48px;
+            border-radius: 14px;
+            background: var(--accent);
+            color: #fff;
+            font-size: 15px;
+            font-weight: 800;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            box-shadow: var(--shadow-md);
+            transition: transform .15s, background .15s;
+        }
+
+        .first-sunday-confirm-btn:active {
+            transform: scale(0.97);
+            background: #4338ca;
+        }
+
+        .first-sunday-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 3px 8px;
+            background: #fef3c7;
+            color: #b45309;
+            border: 1px solid #fde68a;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 800;
+            cursor: pointer;
+            margin-left: 8px;
+            vertical-align: middle;
+            transition: transform .15s;
+        }
+
+        .first-sunday-pill:active {
+            transform: scale(0.93);
+        }
+
         /* Reset dialog */
         .dialog {
             width: 100%;
@@ -2113,6 +2256,7 @@
             <div class="hero-top">
                 <div>
                     <div class="hero-date"><i class="ph-bold ph-calendar-blank"></i><span id="currentDateText"></span>
+                        <button id="firstSundayPill" class="first-sunday-pill hidden" onclick="openFirstSundayModal()" title="매월 첫째 주일 안내사항"><i class="ph-bold ph-calendar-star"></i>첫째 주일 안내</button>
                     </div>
                     <h1>성광교회 예배부 체크리스트</h1>
                 </div>
@@ -2300,6 +2444,41 @@
                             전달</strong>합니다.</span></li>
             </ol>
             <button class="big-btn dark" style="width:100%" onclick="closeOfferingManualModal()">확인했습니다</button>
+        </div>
+    </div>
+
+    <!-- 매월 첫번째 일요일 알림 팝업 -->
+    <div id="firstSundayModal" class="backdrop center hidden" onclick="if (event.target === this) closeFirstSundayModal()">
+        <div class="dialog first-sunday-dialog">
+            <div class="first-sunday-top">
+                <div class="first-sunday-icon"><i class="ph-bold ph-calendar-star"></i></div>
+                <div class="first-sunday-badge" id="firstSundayBadgeText">매월 첫째 주일 알림</div>
+            </div>
+            <h3 id="firstSundayTitle">이번 주는 첫번째 주일입니다!</h3>
+            <p class="first-sunday-desc">예배 준비 및 봉사 시 아래 특별 항목을 확인해 주세요.</p>
+            
+            <div class="first-sunday-list">
+                <div class="first-sunday-item">
+                    <div class="first-sunday-num-box">1</div>
+                    <div class="first-sunday-info">
+                        <div class="first-sunday-item-title">달력 넘기기</div>
+                        <div class="first-sunday-item-desc">새 달을 맞아 본당 및 각 부서실 달력 넘기기</div>
+                    </div>
+                </div>
+                <div class="first-sunday-item">
+                    <div class="first-sunday-num-box">2</div>
+                    <div class="first-sunday-info">
+                        <div class="first-sunday-item-title">성가대 덕담</div>
+                        <div class="first-sunday-item-desc">찬양으로 헌신하는 성가대원들에게 따뜻한 덕담과 격려 전하기</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="first-sunday-actions">
+                <button class="first-sunday-confirm-btn" onclick="confirmFirstSundayModal()">
+                    <i class="ph-bold ph-check"></i>확인했습니다
+                </button>
+            </div>
         </div>
     </div>
 
@@ -4209,6 +4388,59 @@ function deleteDrivePhoto(fileId, fileName) {
             showToast(ok ? 'Apps Script 코드가 복사되었습니다!' : '복사에 실패했습니다.', ok ? 'ph-copy' : 'ph-warning-circle');
         }
 
+        // === 매월 첫번째 일요일 알림 ===
+        function isFirstSunday(d = new Date()) {
+            return d.getDay() === 0 && d.getDate() >= 1 && d.getDate() <= 7;
+        }
+
+        function checkFirstSundayNotice() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const isTest = urlParams.get('testFirstSunday') === '1';
+            const now = new Date();
+            const isTarget = isFirstSunday(now) || isTest;
+
+            const pill = document.getElementById('firstSundayPill');
+            if (pill) {
+                if (isTarget) pill.classList.remove('hidden');
+                else pill.classList.add('hidden');
+            }
+
+            if (!isTarget) return;
+
+            const todayKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+            const sessionKey = 'first_sunday_checked_' + todayKey;
+
+            // 이번 세션에서 확인한 적이 없으면 자동 팝업
+            if (isTest || !sessionStorage.getItem(sessionKey)) {
+                setTimeout(() => {
+                    openFirstSundayModal();
+                }, 500);
+            }
+        }
+
+        function openFirstSundayModal() {
+            const now = new Date();
+            const month = now.getMonth() + 1;
+            const titleEl = document.getElementById('firstSundayTitle');
+            const badgeEl = document.getElementById('firstSundayBadgeText');
+            if (titleEl) titleEl.textContent = `${month}월 첫번째 주일 체크사항`;
+            if (badgeEl) badgeEl.textContent = `${month}월 첫째 주일 알림`;
+
+            openSheet('firstSundayModal');
+        }
+
+        function closeFirstSundayModal() {
+            closeSheet('firstSundayModal');
+        }
+
+        function confirmFirstSundayModal() {
+            const now = new Date();
+            const todayKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+            sessionStorage.setItem('first_sunday_checked_' + todayKey, 'true');
+            closeFirstSundayModal();
+            showToast('첫번째 주일 알림을 확인했습니다.', 'ph-calendar-star');
+        }
+
         function openOfferingManualModal() { openSheet('offeringModal'); }
         function closeOfferingManualModal() { closeSheet('offeringModal'); }
 
@@ -4291,6 +4523,7 @@ function deleteDrivePhoto(fileId, fileName) {
             }
             if (e.key !== 'Escape') return;
             if (!document.getElementById('photoViewerModal').classList.contains('hidden')) closePhotoViewer();
+            else if (!document.getElementById('firstSundayModal').classList.contains('hidden')) closeFirstSundayModal();
             else if (!document.getElementById('photoModal').classList.contains('hidden')) closePhotoModal();
             else if (!document.getElementById('driveConfigModal').classList.contains('hidden')) closeDriveConfigModal();
             else if (!document.getElementById('attendanceModal').classList.contains('hidden')) closeAttendanceModal();
@@ -4358,6 +4591,7 @@ function deleteDrivePhoto(fileId, fileName) {
         window.onload = async function () {
             loadState();
             updateDateDisplay();
+            checkFirstSundayNotice();
             await initPhotoDB();
             await refreshPhotoCache();
             updateDriveBannerStatus();
