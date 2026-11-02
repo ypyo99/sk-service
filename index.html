@@ -3857,6 +3857,36 @@ function doGet(e) {
             updateViewerDisplay();
         }
 
+        // 모바일 사진 뷰어 좌우 터치 스와이프 제스처
+        let viewerTouchStartX = 0;
+        let viewerTouchStartY = 0;
+        const viewerModalEl = document.getElementById('photoViewerModal');
+        if (viewerModalEl) {
+            viewerModalEl.addEventListener('touchstart', e => {
+                if (e.changedTouches && e.changedTouches.length > 0) {
+                    viewerTouchStartX = e.changedTouches[0].clientX;
+                    viewerTouchStartY = e.changedTouches[0].clientY;
+                }
+            }, { passive: true });
+
+            viewerModalEl.addEventListener('touchend', e => {
+                if (!e.changedTouches || e.changedTouches.length === 0) return;
+                const endX = e.changedTouches[0].clientX;
+                const endY = e.changedTouches[0].clientY;
+                const diffX = endX - viewerTouchStartX;
+                const diffY = endY - viewerTouchStartY;
+
+                // 좌우 스와이프 (수평 이동량이 40px 이상이고 수직 이동량보다 클 때)
+                if (Math.abs(diffX) > 40 && Math.abs(diffX) > Math.abs(diffY)) {
+                    if (diffX < 0) {
+                        viewerNextPhoto();
+                    } else {
+                        viewerPrevPhoto();
+                    }
+                }
+            }, { passive: true });
+        }
+
         function closePhotoViewer() {
             document.getElementById('photoViewerModal').classList.add('hidden');
             if (!document.querySelector('.backdrop:not(.hidden)')) {
