@@ -5,6 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport"
         content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="color-scheme" content="light">
+    <meta name="supported-color-schemes" content="light">
     <meta name="theme-color" content="#1e1b4b">
     <meta name="theme-color" content="#1a1f3c">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -22,6 +24,7 @@
     <script src="https://unpkg.com/@phosphor-icons/web@2.1.1"></script>
     <style>
         :root {
+            color-scheme: light;
             --bg: #f5f3ef;
             --surface: #ffffff;
             --surface-2: #f8f7f4;
@@ -45,29 +48,6 @@
             --shadow-lg: 0 20px 50px -12px rgba(28, 25, 23, .35);
             --radius: 18px;
             --safe-b: env(safe-area-inset-bottom, 0px);
-        }
-
-        @media (prefers-color-scheme: dark) {
-            :root {
-                --bg: #0f0e17;
-                --surface: #1a1926;
-                --surface-2: #22212f;
-                --ink: #f5f5f4;
-                --ink-2: #d6d3d1;
-                --muted: #8f8b9c;
-                --line: #2e2c3d;
-                --accent: #818cf8;
-                --accent-soft: #25234a;
-                --ok-soft: #063d2e;
-                --danger-soft: #45101f;
-                --warn-soft: #3d2a06;
-                --warn-ink: #fcd34d;
-                --hero-1: #13112e;
-                --hero-2: #26236b;
-                --shadow-sm: 0 1px 2px rgba(0, 0, 0, .4);
-                --shadow-md: 0 6px 20px -6px rgba(0, 0, 0, .6);
-                --shadow-lg: 0 20px 50px -12px rgba(0, 0, 0, .8);
-            }
         }
 
         * {
