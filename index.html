@@ -665,17 +665,29 @@
 
         .group {
             background: var(--surface);
-            border-radius: 22px;
+            border-radius: 20px;
             box-shadow: var(--shadow-sm);
-            border: 1px solid var(--line);
+            border: 1px solid color-mix(in srgb, var(--c) 25%, var(--line));
             overflow: hidden;
         }
 
+        .group.all-done {
+            border-color: color-mix(in srgb, var(--ok) 25%, var(--line));
+        }
+
+        /* 카테고리 헤더: 고유 색상을 활용한 배경색으로 시인성 강화 */
         .group-head {
             display: flex;
             align-items: center;
             gap: 8px;
-            padding: 9px 12px;
+            padding: 10px 14px;
+            background: color-mix(in srgb, var(--c) 14%, #ffffff);
+            border-bottom: 1px solid color-mix(in srgb, var(--c) 22%, var(--line));
+        }
+
+        .group.all-done .group-head {
+            background: color-mix(in srgb, var(--ok) 14%, #ffffff);
+            border-bottom-color: color-mix(in srgb, var(--ok) 22%, var(--line));
         }
 
         .gh-main {
@@ -694,15 +706,17 @@
             flex-shrink: 0;
             display: grid;
             place-items: center;
-            background: color-mix(in srgb, var(--c) 14%, transparent);
-            color: var(--c);
+            background: var(--c);
+            color: #ffffff;
             font-size: 13.5px;
             font-weight: 900;
+            box-shadow: 0 1px 3px color-mix(in srgb, var(--c) 35%, transparent);
         }
 
         .group.all-done .gh-code {
             background: var(--ok);
             color: #fff;
+            box-shadow: 0 1px 3px color-mix(in srgb, var(--ok) 35%, transparent);
         }
 
         .gh-text {
@@ -714,6 +728,7 @@
             font-size: 16px;
             font-weight: 800;
             letter-spacing: -.01em;
+            color: var(--ink);
             display: flex;
             align-items: baseline;
             gap: 7px;
@@ -722,13 +737,17 @@
         .gh-name small {
             font-size: 12px;
             font-weight: 700;
-            color: var(--muted);
+            color: color-mix(in srgb, var(--c) 70%, var(--ink));
+        }
+
+        .group.all-done .gh-name small {
+            color: var(--ok);
         }
 
         .gh-meter {
             height: 4px;
             border-radius: 999px;
-            background: var(--surface-2);
+            background: color-mix(in srgb, var(--c) 20%, #ffffff);
             margin-top: 5px;
             overflow: hidden;
         }
@@ -747,17 +766,22 @@
         .gh-btn {
             flex-shrink: 0;
             height: 30px;
-            padding: 0 9px;
+            padding: 0 10px;
             border-radius: 8px;
             font-size: 12px;
             font-weight: 800;
-            background: var(--surface-2);
+            background: #ffffff;
             color: var(--ink-2);
-            border: 1px solid var(--line);
+            border: 1px solid color-mix(in srgb, var(--c) 25%, var(--line));
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
         }
 
         .gh-btn:active {
             transform: scale(.96);
+        }
+
+        .group.all-done .gh-btn {
+            border-color: color-mix(in srgb, var(--ok) 30%, var(--line));
         }
 
         .gh-chev {
@@ -766,7 +790,7 @@
             border-radius: 8px;
             display: grid;
             place-items: center;
-            color: var(--muted);
+            color: var(--ink-2);
             font-size: 16px;
             transition: transform .2s;
         }
@@ -776,7 +800,7 @@
         }
 
         .items {
-            padding: 0 8px 8px;
+            padding: 8px 8px 8px;
             display: flex;
             flex-direction: column;
             gap: 4px;
