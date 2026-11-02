@@ -2408,7 +2408,8 @@ function doGet(e) {
         const DEFAULT_DRIVE_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbz7OqcMwIx4Jh5-WLJXdrw4NlaCQW7I4AZZ5PowseYfQti0svG2tDlynDne3FuDtzgWcA/exec';
 
         function getDriveWebhookUrl() {
-            return (localStorage.getItem(DRIVE_WEBHOOK_KEY) || DEFAULT_DRIVE_WEBHOOK_URL || '').trim();
+            // 앱에 내장된 기본 웹 앱 URL을 항상 최우선으로 적용 (기기별 로컬스토리지 잔여 구버전 URL 무시)
+            return (DEFAULT_DRIVE_WEBHOOK_URL || localStorage.getItem(DRIVE_WEBHOOK_KEY) || '').trim();
         }
 
         // 순서코드별 색상 (데이터가 아닌 표시용 설정)
@@ -3353,17 +3354,17 @@ function doGet(e) {
                 for (const p of result.photos) {
                     let targetItemId = p.itemId;
 
-                    // 1_주보확인_... 및 기존 예배부_1부_1_주보 확인_... 파일명 매칭
+                    // 파일명으로 체크리스트 항목 매칭
                     if (!targetItemId && p.fileName) {
                         const normFileName = p.fileName.replace(/[\s_]/g, '').toLowerCase();
 
-                        // 1순위: [코드 + 작업내용] 일치 (예: 1주보확인)
+                        // 1순위: [코드 + 작업내용] 매칭 (예: 1주보확인, 1본당내성경책정리)
                         let matched = SPREADSHEET_ITEMS.find(i => {
                             const normCodeAndText = (i.code + i.text).replace(/[\s_]/g, '').toLowerCase();
                             return normFileName.includes(normCodeAndText);
                         });
 
-                        // 2순위: 작업내용 단독 일치 (예: 주보확인)
+                        // 2순위: 작업내용 단독 매칭 (예: 주보확인, 성경책정리)
                         if (!matched) {
                             matched = SPREADSHEET_ITEMS.find(i => {
                                 const normText = i.text.replace(/[\s_]/g, '').toLowerCase();
@@ -3377,28 +3378,28 @@ function doGet(e) {
                     }
                     if (!targetItemId) continue;
 
+                    // 기존 DB 레코드 검색 및 갱신/신규 생성
                     const existing = await getPhotosByItemId(targetItemId);
-                    const alreadyHas = existing.some(item => item.id === p.id || item.driveFileId === p.id || item.fileName === p.fileName);
+                    const found = existing.find(item => item.id === p.id || item.driveFileId === p.id || item.fileName === p.fileName);
 
-                    if (!alreadyHas) {
-                        const record = {
-                            id: p.id,
-                            itemId: targetItemId,
-                            fileName: p.fileName,
-                            dataUrl: p.thumbUrl || p.driveUrl,
-                            driveFileId: p.id,
-                            driveViewUrl: p.driveUrl,
-                            thumbUrl: p.thumbUrl,
-                            createdAt: p.createdAt || new Date().toISOString(),
-                            synced: true,
-                            isUploading: false
-                        };
-                        await savePhotoRecord(record);
-                        updated = true;
-                    }
+                    const record = {
+                        id: found ? found.id : (p.id || ('photo_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6))),
+                        itemId: targetItemId,
+                        fileName: p.fileName,
+                        dataUrl: (found && found.dataUrl && found.dataUrl.startsWith('data:')) ? found.dataUrl : (p.thumbUrl || p.driveUrl),
+                        driveFileId: p.id,
+                        driveViewUrl: p.driveUrl,
+                        thumbUrl: p.thumbUrl,
+                        createdAt: p.createdAt || (found ? found.createdAt : new Date().toISOString()),
+                        synced: true,
+                        isUploading: false
+                    };
+
+                    await savePhotoRecord(record);
+                    updated = true;
                 }
 
-                if (updated) {
+                if (updated || result.photos.length > 0) {
                     await refreshPhotoCache();
                     renderChecklist();
                     if (currentPhotoItemId) {
@@ -3504,6 +3505,9 @@ function doGet(e) {
             updateDriveBannerStatus();
             await renderPhotoModalList();
             openSheet('photoModal');
+
+            // 모달 열릴 때 구글 드라이브 최신 사진 즉시 동기화하여 PC 화면 실시간 반영
+            syncPhotosFromDrive();
         }
 
         function closePhotoModal() {
