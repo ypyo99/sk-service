@@ -143,7 +143,13 @@
             font-size: 16px;
         }
 
-        .hero-title-row { display: flex; align-items: center; gap: 8px; margin-top: 3px; }
+        .hero-title-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 3px;
+        }
+
         .hero h1 {
             font-size: clamp(17px, 4.5vw, 22px);
             font-weight: 800;
@@ -151,27 +157,71 @@
             margin-top: 3px;
             white-space: nowrap;
         }
+
         @media (max-width: 440px) {
-            .hero-top { gap: 8px; }
-            .hero h1 { font-size: 17.5px; }
-            .hero-date { font-size: 13.5px; }
-            .hero-actions { gap: 6px; }
-            .act .icon-btn { width: 44px; height: 44px; font-size: 23px; }
-            .act .act-label { font-size: 10.5px; }
+            .hero-top {
+                gap: 8px;
+            }
+
+            .hero h1 {
+                font-size: 17.5px;
+            }
+
+            .hero-date {
+                font-size: 13.5px;
+            }
+
+            .hero-actions {
+                gap: 6px;
+            }
+
+            .act .icon-btn {
+                width: 44px;
+                height: 44px;
+                font-size: 23px;
+            }
+
+            .act .act-label {
+                font-size: 10.5px;
+            }
         }
+
         @media (max-width: 370px) {
-            .hero h1 { font-size: 16px; }
-            .act .icon-btn { width: 40px; height: 40px; font-size: 20px; }
+            .hero h1 {
+                font-size: 16px;
+            }
+
+            .act .icon-btn {
+                width: 40px;
+                height: 40px;
+                font-size: 20px;
+            }
         }
+
         .hero-drive-btn {
-            width: 34px; height: 34px; border-radius: 11px;
-            display: inline-grid; place-items: center;
-            background: rgba(255, 255, 255, .12); border: 1.5px solid rgba(255, 255, 255, .2);
-            color: rgba(255, 255, 255, .8); font-size: 19px;
-            cursor: pointer; transition: all .15s ease; flex-shrink: 0;
+            width: 34px;
+            height: 34px;
+            border-radius: 11px;
+            display: inline-grid;
+            place-items: center;
+            background: rgba(255, 255, 255, .12);
+            border: 1.5px solid rgba(255, 255, 255, .2);
+            color: rgba(255, 255, 255, .8);
+            font-size: 19px;
+            cursor: pointer;
+            transition: all .15s ease;
+            flex-shrink: 0;
         }
-        .hero-drive-btn:active { transform: scale(.92); background: rgba(255, 255, 255, .25); }
-        .hero-drive-btn:hover { color: #fff; border-color: rgba(255, 255, 255, .4); }
+
+        .hero-drive-btn:active {
+            transform: scale(.92);
+            background: rgba(255, 255, 255, .25);
+        }
+
+        .hero-drive-btn:hover {
+            color: #fff;
+            border-color: rgba(255, 255, 255, .4);
+        }
 
         .icon-btn {
             width: 42px;
@@ -1964,7 +2014,8 @@
         <div class="wrap">
             <div class="hero-top">
                 <div>
-                    <div class="hero-date"><i class="ph-bold ph-calendar-blank"></i><span id="currentDateText"></span></div>
+                    <div class="hero-date"><i class="ph-bold ph-calendar-blank"></i><span id="currentDateText"></span>
+                    </div>
                     <h1>성광교회 예배부 체크리스트</h1>
                 </div>
                 <div class="hero-actions">
@@ -2354,7 +2405,7 @@ function doGet(e) {
 
         // 구글 드라이브 연동 설정 (웹 앱 배포 URL 기본 내장)
         // DRIVE_WEBHOOK_KEY는 상단에 선언됨
-        const DEFAULT_DRIVE_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycby8AkR2zDLBLql_W8zXVgb7Mx0r7BAvAgHdtUC8w8yc7OvKb87N5csoLFfZFNJ-Jbhbew/exec';
+        const DEFAULT_DRIVE_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbz7OqcMwIx4Jh5-WLJXdrw4NlaCQW7I4AZZ5PowseYfQti0svG2tDlynDne3FuDtzgWcA/exec';
 
         function getDriveWebhookUrl() {
             return (localStorage.getItem(DRIVE_WEBHOOK_KEY) || DEFAULT_DRIVE_WEBHOOK_URL || '').trim();
@@ -3432,7 +3483,7 @@ function doGet(e) {
                     await savePhotoRecord(photoRecord);
                     return false;
                 }
-                        } catch (err) {
+            } catch (err) {
                 console.error('Drive photo upload failed:', err);
                 photoRecord.syncError = err.message || '네트워크 오류';
                 await savePhotoRecord(photoRecord);
