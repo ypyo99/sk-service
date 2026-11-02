@@ -3287,6 +3287,61 @@ function doGet(e) {
             });
         }
 
+        // 구글 드라이브에서 최신 사진 목록을 가져와 로컬 DB 및 화면 동기화
+        async function syncPhotosFromDrive() {
+            const webhookUrl = getDriveWebhookUrl();
+            if (!webhookUrl) return;
+
+            try {
+                const res = await fetch(`${webhookUrl}?action=getPhotos&t=${Date.now()}`);
+                if (!res.ok) return;
+                const result = await res.json();
+                if (!result.success || !Array.isArray(result.photos)) return;
+
+                let updated = false;
+                for (const p of result.photos) {
+                    let targetItemId = p.itemId;
+
+                    // itemId가 없는 기존 사진의 경우 파일명으로 itemId 매칭 시도
+                    if (!targetItemId && p.fileName) {
+                        const matchedItem = SPREADSHEET_ITEMS.find(i => p.fileName.includes(i.text) || (p.fileName.includes(`_${i.code}_`) && p.fileName.includes(i.text.substring(0, 4))));
+                        if (matchedItem) targetItemId = matchedItem.id;
+                    }
+                    if (!targetItemId) continue;
+
+                    const existing = await getPhotosByItemId(targetItemId);
+                    const alreadyHas = existing.some(item => item.id === p.id || item.driveFileId === p.id || item.fileName === p.fileName);
+
+                    if (!alreadyHas) {
+                        const record = {
+                            id: p.id,
+                            itemId: targetItemId,
+                            fileName: p.fileName,
+                            dataUrl: p.thumbUrl || p.driveUrl,
+                            driveFileId: p.id,
+                            driveViewUrl: p.driveUrl,
+                            thumbUrl: p.thumbUrl,
+                            createdAt: p.createdAt || new Date().toISOString(),
+                            synced: true,
+                            isUploading: false
+                        };
+                        await savePhotoRecord(record);
+                        updated = true;
+                    }
+                }
+
+                if (updated) {
+                    await refreshPhotoCache();
+                    renderChecklist();
+                    if (currentPhotoItemId) {
+                        await renderPhotoModalList();
+                    }
+                }
+            } catch (err) {
+                console.warn('Drive photo sync skipped:', err);
+            }
+        }
+
         // 이미지 압축 (최대 해상도 1600px, JPEG 0.82)
         function compressImage(file, maxWidth = 1600, quality = 0.82) {
             return new Promise((resolve, reject) => {
