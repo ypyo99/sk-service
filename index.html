@@ -920,6 +920,10 @@
             background: var(--ok);
         }
 
+        .pill-btn.danger {
+            background: var(--danger);
+        }
+
         .pill-btn:active {
             transform: scale(.97);
         }
@@ -2378,6 +2382,7 @@
             </button>
         </div>
         <div class="viewer-bottom">
+            <button id="viewerDeleteBtn" class="pill-btn danger" onclick="viewerDeleteCurrentPhoto()"><i class="ph-bold ph-trash"></i>삭제</button>
             <a id="viewerDriveBtn" class="pill-btn green hidden" target="_blank" rel="noopener noreferrer"><i
                     class="ph-bold ph-arrow-square-out"></i>구글드라이브에서 원본 보기</a>
             <button class="pill-btn" onclick="closePhotoViewer()"><i class="ph-bold ph-check"></i>닫기</button>
@@ -2407,6 +2412,17 @@
                     <pre id="gasScriptCode">function doPost(e) {
   try {
     var data = JSON.parse(e.postData.contents);
+    
+    // 0. 사진 삭제 요청 처리
+    if (data.action === 'delete' || data.action === 'deletePhoto') {
+      var ok = deleteDrivePhoto(data.fileId, data.fileName);
+      return ContentService.createTextOutput(JSON.stringify({
+        success: ok,
+        fileId: data.fileId,
+        fileName: data.fileName,
+        message: ok ? '구글 드라이브에서 삭제되었습니다.' : '파일을 찾을 수 없습니다.'
+      })).setMimeType(ContentService.MimeType.JSON);
+    }
     
     // 1. 최상위 루트 폴더: "예배부 데이터"
     var rootFolderName = "예배부 데이터";
@@ -2456,12 +2472,97 @@
 }
 
 function doGet(e) {
+  var action = (e && e.parameter) ? e.parameter.action : '';
+  
+  // 1. 사진 삭제 요청 (GET 방식)
+  if (action === 'delete' || action === 'deletePhoto') {
+    var fileId = e.parameter.fileId;
+    var fileName = e.parameter.fileName;
+    var ok = deleteDrivePhoto(fileId, fileName);
+    return ContentService.createTextOutput(JSON.stringify({
+      success: ok,
+      fileId: fileId,
+      fileName: fileName,
+      message: ok ? '구글 드라이브에서 삭제되었습니다.' : '파일을 찾을 수 없습니다.'
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
+  
+  // 2. 사진 목록 조회 (실시간 동기화)
+  if (action === 'getPhotos') {
+    try {
+      var rootFolders = DriveApp.getFoldersByName("예배부 데이터");
+      if (!rootFolders.hasNext()) {
+        return ContentService.createTextOutput(JSON.stringify({ success: true, photos: [] })).setMimeType(ContentService.MimeType.JSON);
+      }
+      var rootFolder = rootFolders.next();
+      var photoFolders = rootFolder.getFoldersByName("사진");
+      if (!photoFolders.hasNext()) {
+        return ContentService.createTextOutput(JSON.stringify({ success: true, photos: [] })).setMimeType(ContentService.MimeType.JSON);
+      }
+      var photoFolder = photoFolders.next();
+      var files = photoFolder.getFiles();
+      var photos = [];
+      while (files.hasNext()) {
+        var file = files.next();
+        if (file.isTrashed()) continue; // 휴지통 파일 제외
+        photos.push({
+          id: file.getId(),
+          fileName: file.getName(),
+          driveUrl: file.getUrl(),
+          thumbUrl: 'https://drive.google.com/thumbnail?id=' + file.getId() + '&sz=w600',
+          createdAt: file.getDateCreated().toISOString()
+        });
+      }
+      return ContentService.createTextOutput(JSON.stringify({
+        success: true,
+        photos: photos
+      })).setMimeType(ContentService.MimeType.JSON);
+    } catch (err) {
+      return ContentService.createTextOutput(JSON.stringify({
+        success: false,
+        error: err.toString()
+      })).setMimeType(ContentService.MimeType.JSON);
+    }
+  }
+
+  // 3. 상태 확인
   return ContentService.createTextOutput(JSON.stringify({
     status: 'ok',
     folder: '예배부 데이터',
     subFolders: ['사진', '출석'],
     message: '성광교회 예배부 데이터 저장소 (사진: \\예배부 데이터\\사진, 출석: \\예배부 데이터\\출석) 준비 완료'
   })).setMimeType(ContentService.MimeType.JSON);
+}
+
+// 구글 드라이브 사진 파일 삭제(휴지통 이동) 함수
+function deleteDrivePhoto(fileId, fileName) {
+  var deleted = false;
+  if (fileId) {
+    try {
+      var file = DriveApp.getFileById(fileId);
+      file.setTrashed(true);
+      deleted = true;
+    } catch (e) {}
+  }
+  if (!deleted && fileName) {
+    try {
+      var rootFolders = DriveApp.getFoldersByName("예배부 데이터");
+      if (rootFolders.hasNext()) {
+        var rootFolder = rootFolders.next();
+        var photoFolders = rootFolder.getFoldersByName("사진");
+        if (photoFolders.hasNext()) {
+          var photoFolder = photoFolders.next();
+          var files = photoFolder.getFilesByName(fileName);
+          while (files.hasNext()) {
+            var f = files.next();
+            f.setTrashed(true);
+            deleted = true;
+          }
+        }
+      }
+    } catch (e) {}
+  }
+  return deleted;
 }</pre>
                     <button class="copy-code-btn" onclick="copyGasCode()"><i class="ph-bold ph-copy"></i>코드 복사</button>
                 </div>
@@ -3414,6 +3515,65 @@ function doGet(e) {
             });
         }
 
+        // 모든 사진 레코드 가져오기
+        function getAllPhotosFromDB() {
+            return new Promise((resolve) => {
+                if (!photoDB) { resolve([]); return; }
+                try {
+                    const tx = photoDB.transaction(PHOTO_STORE_NAME, 'readonly');
+                    const store = tx.objectStore(PHOTO_STORE_NAME);
+                    const req = store.getAll();
+                    req.onsuccess = () => resolve(req.result || []);
+                    req.onerror = () => resolve([]);
+                } catch (e) {
+                    resolve([]);
+                }
+            });
+        }
+
+        // 구글 드라이브에서 사진 삭제 (휴지통 이동)
+        async function deletePhotoFromDrive(driveFileId, fileName) {
+            const webhookUrl = getDriveWebhookUrl();
+            if (!webhookUrl || (!driveFileId && !fileName)) return false;
+
+            try {
+                // 1. GET 방식 호출 (CORS 리다이렉트 최적화)
+                const url = new URL(webhookUrl);
+                url.searchParams.set('action', 'delete');
+                if (driveFileId) url.searchParams.set('fileId', driveFileId);
+                if (fileName) url.searchParams.set('fileName', fileName);
+                url.searchParams.set('t', Date.now());
+
+                const res = await fetch(url.toString());
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data && data.success) return true;
+                }
+            } catch (err) {
+                console.warn('Drive GET delete failed, trying POST:', err);
+            }
+
+            try {
+                // 2. POST 방식 폴백
+                const res = await fetch(webhookUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({
+                        action: 'delete',
+                        fileId: driveFileId,
+                        fileName: fileName
+                    })
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    return data && data.success;
+                }
+            } catch (err2) {
+                console.error('Drive POST delete failed:', err2);
+            }
+            return false;
+        }
+
         // 사진 삭제
         function deletePhotoRecord(id) {
             return new Promise((resolve) => {
@@ -3480,13 +3640,13 @@ function doGet(e) {
                     if (!targetItemId && p.fileName) {
                         const normFileName = p.fileName.replace(/[\s_]/g, '').toLowerCase();
 
-                        // 1순위: [코드 + 작업내용] 매칭 (예: 1주보확인, 1본당내성경책정리)
+                        // 1순위: [코드 + 작업내용] 매칭
                         let matched = SPREADSHEET_ITEMS.find(i => {
                             const normCodeAndText = (i.code + i.text).replace(/[\s_]/g, '').toLowerCase();
                             return normFileName.includes(normCodeAndText);
                         });
 
-                        // 2순위: 작업내용 단독 매칭 (예: 주보확인, 성경책정리)
+                        // 2순위: 작업내용 단독 매칭
                         if (!matched) {
                             matched = SPREADSHEET_ITEMS.find(i => {
                                 const normText = i.text.replace(/[\s_]/g, '').toLowerCase();
@@ -3519,6 +3679,21 @@ function doGet(e) {
 
                     await savePhotoRecord(record);
                     updated = true;
+                }
+
+                // 구글 드라이브에서 삭제된 사진 로컬 DB 정리 (양방향 동기화)
+                const drivePhotoIds = new Set(result.photos.map(p => p.id).filter(Boolean));
+                const driveFileNames = new Set(result.photos.map(p => p.fileName).filter(Boolean));
+                const allLocals = await getAllPhotosFromDB();
+                for (const localP of allLocals) {
+                    if (localP.synced && !localP.isUploading) {
+                        const hasId = localP.driveFileId && drivePhotoIds.has(localP.driveFileId);
+                        const hasName = localP.fileName && driveFileNames.has(localP.fileName);
+                        if (!hasId && !hasName) {
+                            await deletePhotoRecord(localP.id);
+                            updated = true;
+                        }
+                    }
                 }
 
                 if (updated || result.photos.length > 0) {
@@ -3798,14 +3973,86 @@ function doGet(e) {
             showToast(`${total}장의 사진이 첨부되었습니다!`, 'ph-camera');
         }
 
-        // 사진 삭제
+        // 사진 삭제 (체크리스트 사진 모달)
         async function confirmDeletePhoto(photoId) {
-            if (!confirm('이 사진을 삭제하시겠습니까?')) return;
+            if (!confirm('이 사진을 삭제하시겠습니까?\n(구글 드라이브에서도 함께 삭제됩니다)')) return;
+
+            let target = null;
+            if (currentPhotoItemId) {
+                const photos = await getPhotosByItemId(currentPhotoItemId);
+                target = photos.find(p => p.id === photoId);
+            }
+            if (!target) {
+                const allPhotos = await getAllPhotosFromDB();
+                target = allPhotos.find(p => p.id === photoId);
+            }
+
+            const driveFileId = target ? (target.driveFileId || target.id) : null;
+            const fileName = target ? target.fileName : null;
+
+            // 로컬 IndexedDB에서 삭제 및 화면 갱신
             await deletePhotoRecord(photoId);
             await refreshPhotoCache();
             await renderPhotoModalList();
             renderChecklist();
-            showToast('사진이 삭제되었습니다.', 'ph-trash');
+
+            // 구글 드라이브에서도 삭제 호출
+            if (driveFileId || fileName) {
+                showToast('구글 드라이브 삭제 중...', 'ph-spinner-gap spin');
+                const ok = await deletePhotoFromDrive(driveFileId, fileName);
+                if (ok) {
+                    showToast('사진 및 구글 드라이브 삭제 완료', 'ph-trash');
+                } else {
+                    showToast('로컬 삭제 완료 (드라이브 확인 필요)', 'ph-trash');
+                }
+            } else {
+                showToast('사진이 삭제되었습니다.', 'ph-trash');
+            }
+        }
+
+        // 사진 삭제 (확대 뷰어 화면에서 현재 보는 사진 삭제)
+        async function viewerDeleteCurrentPhoto() {
+            if (!currentViewerPhotos.length) return;
+            const target = currentViewerPhotos[currentViewerIndex];
+            if (!target) return;
+            if (!confirm('이 사진을 삭제하시겠습니까?\n(구글 드라이브에서도 함께 삭제됩니다)')) return;
+
+            const photoId = target.id;
+            const driveFileId = target.driveFileId || target.id;
+            const fileName = target.fileName;
+
+            // 로컬 IndexedDB에서 삭제
+            await deletePhotoRecord(photoId);
+            await refreshPhotoCache();
+            renderChecklist();
+
+            // 뷰어 리스트에서 제거 및 슬라이드 업데이트
+            currentViewerPhotos.splice(currentViewerIndex, 1);
+            if (currentViewerPhotos.length === 0) {
+                closePhotoViewer();
+            } else {
+                if (currentViewerIndex >= currentViewerPhotos.length) {
+                    currentViewerIndex = currentViewerPhotos.length - 1;
+                }
+                updateViewerDisplay();
+            }
+
+            if (currentPhotoItemId) {
+                await renderPhotoModalList();
+            }
+
+            // 구글 드라이브 삭제
+            if (driveFileId || fileName) {
+                showToast('구글 드라이브 삭제 중...', 'ph-spinner-gap spin');
+                const ok = await deletePhotoFromDrive(driveFileId, fileName);
+                if (ok) {
+                    showToast('사진 및 구글 드라이브 삭제 완료', 'ph-trash');
+                } else {
+                    showToast('로컬 삭제 완료 (드라이브 확인 필요)', 'ph-trash');
+                }
+            } else {
+                showToast('사진이 삭제되었습니다.', 'ph-trash');
+            }
         }
 
         // 사진 확대 뷰어 (이전/다음 슬라이드 지원)
