@@ -2828,7 +2828,7 @@ function doGet(e) {
             const photoBtnHtml = pCount > 0
                 ? `<button class="photo-btn has-photo" onclick="event.stopPropagation(); openPhotoModal('${item.id}')" title="사진 ${pCount}장 보기/추가">
                      <div class="photo-thumb-wrap">
-                         <img src="${pInfo.latestThumb}" class="photo-thumb" alt="사진" />
+                         <img src="${pInfo.latestThumb}" class="photo-thumb" alt="사진" referrerpolicy="no-referrer" />
                          <span class="photo-badge">${pCount}</span>
                      </div>
                    </button>`
@@ -3269,11 +3269,11 @@ function doGet(e) {
                         const cache = {};
                         all.forEach(p => {
                             if (!cache[p.itemId]) {
-                                cache[p.itemId] = { count: 0, latestThumb: p.dataUrl, latestTime: p.createdAt };
+                                cache[p.itemId] = { count: 0, latestThumb: p.dataUrl || p.thumbUrl || p.driveViewUrl, latestTime: p.createdAt };
                             }
                             cache[p.itemId].count += 1;
                             if (new Date(p.createdAt) >= new Date(cache[p.itemId].latestTime)) {
-                                cache[p.itemId].latestThumb = p.dataUrl;
+                                cache[p.itemId].latestThumb = p.dataUrl || p.thumbUrl || p.driveViewUrl;
                                 cache[p.itemId].latestTime = p.createdAt;
                             }
                         });
@@ -3302,10 +3302,27 @@ function doGet(e) {
                 for (const p of result.photos) {
                     let targetItemId = p.itemId;
 
-                    // itemId가 없는 기존 사진의 경우 파일명으로 itemId 매칭 시도
+                    // 1_주보확인_... 및 기존 예배부_1부_1_주보 확인_... 파일명 매칭
                     if (!targetItemId && p.fileName) {
-                        const matchedItem = SPREADSHEET_ITEMS.find(i => p.fileName.includes(i.text) || (p.fileName.includes(`_${i.code}_`) && p.fileName.includes(i.text.substring(0, 4))));
-                        if (matchedItem) targetItemId = matchedItem.id;
+                        const normFileName = p.fileName.replace(/[\s_]/g, '').toLowerCase();
+
+                        // 1순위: [코드 + 작업내용] 일치 (예: 1주보확인)
+                        let matched = SPREADSHEET_ITEMS.find(i => {
+                            const normCodeAndText = (i.code + i.text).replace(/[\s_]/g, '').toLowerCase();
+                            return normFileName.includes(normCodeAndText);
+                        });
+
+                        // 2순위: 작업내용 단독 일치 (예: 주보확인)
+                        if (!matched) {
+                            matched = SPREADSHEET_ITEMS.find(i => {
+                                const normText = i.text.replace(/[\s_]/g, '').toLowerCase();
+                                return normText.length >= 2 && normFileName.includes(normText);
+                            });
+                        }
+
+                        if (matched) {
+                            targetItemId = matched.id;
+                        }
                     }
                     if (!targetItemId) continue;
 
@@ -3507,7 +3524,7 @@ function doGet(e) {
                 return `
                     <div class="photo-card">
                         <div class="photo-card-img-wrap" onclick="openPhotoViewer('${p.id}')">
-                            <img class="photo-card-img" src="${p.dataUrl || p.thumbUrl || p.driveViewUrl}" alt="첨부 사진" />
+                            <img class="photo-card-img" src="${p.dataUrl || p.thumbUrl || p.driveViewUrl}" alt="첨부 사진" referrerpolicy="no-referrer" />
                         </div>
                         <div class="photo-card-body">
                             <span class="photo-card-time">${timeStr}</span>
@@ -3548,8 +3565,10 @@ function doGet(e) {
                 const file = files[i];
                 try {
                     const compressedDataUrl = await compressImage(file, 1600, 0.82);
-                    const cleanText = (item ? item.text : '작업').replace(/[\/\:*?"<>|]/g, '_').substring(0, 15);
-                    const fileName = `예배부_${srvName}_${item ? item.code : ''}_${cleanText}_${dateStr}_${timeStr}_${i + 1}.jpg`;
+                    // 사용자 지정 규칙: 1_주보확인_날짜_시간_순번.jpg (공백 및 특수문자 제거)
+                    const cleanItemText = (item ? item.text : '작업').replace(/[\s\/\:*?"<>|]/g, '');
+                    const itemCode = (item && item.code) ? item.code : '1';
+                    const fileName = `${itemCode}_${cleanItemText}_${dateStr}_${timeStr}_${i + 1}.jpg`;
 
                     const record = {
                         id: 'photo_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
