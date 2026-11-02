@@ -2359,6 +2359,14 @@ function doGet(e) {
         const SHEET_CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=${SHEET_GID}`;
         const DATA_CACHE_KEY = 'CHURCH_WORSHIP_SHEET_DATA_CACHE';
 
+        // 구글 드라이브 연동 설정 (웹 앱 배포 URL 기본 내장)
+        // DRIVE_WEBHOOK_KEY는 상단에 선언됨
+        const DEFAULT_DRIVE_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycby8AkR2zDLBLql_W8zXVgb7Mx0r7BAvAgHdtUC8w8yc7OvKb87N5csoLFfZFNJ-Jbhbew/exec';
+
+        function getDriveWebhookUrl() {
+            return (localStorage.getItem(DRIVE_WEBHOOK_KEY) || DEFAULT_DRIVE_WEBHOOK_URL || '').trim();
+        }
+
         // 순서코드별 색상 (데이터가 아닌 표시용 설정)
         const CATEGORY_COLORS = {
             '1': '#2563eb', '2': '#e11d48', '3': '#4f46e5', '5': '#d97706', '7': '#059669',
@@ -2899,7 +2907,7 @@ function doGet(e) {
 
         function renderAttendanceModal() {
             // 구글 드라이브 연동 상태 배너 갱신
-            const driveUrl = (localStorage.getItem(DRIVE_WEBHOOK_KEY) || '').trim();
+            const driveUrl = getDriveWebhookUrl();
             const attBannerStatus = document.getElementById('attDriveBannerStatus');
             const attBannerText = document.getElementById('attDriveBannerText');
             if (attBannerStatus && attBannerText) {
@@ -3046,7 +3054,7 @@ function doGet(e) {
 
         // 출석 집계표 파일 구글 드라이브 (\예배부 데이터) 업로드
         async function uploadAttendanceReportToDrive(fileName, fileContent) {
-            const webhookUrl = (localStorage.getItem(DRIVE_WEBHOOK_KEY) || '').trim();
+            const webhookUrl = getDriveWebhookUrl();
             if (!webhookUrl) {
                 return { success: false, needConfig: true };
             }
@@ -3098,7 +3106,7 @@ function doGet(e) {
         // 드라이브에만 즉시 파일 기록하는 버튼 핸들러
         async function saveAttendanceFileToDriveOnly() {
             const { fileName, fileContent } = generateAttendanceReportContent();
-            const webhookUrl = (localStorage.getItem(DRIVE_WEBHOOK_KEY) || '').trim();
+            const webhookUrl = getDriveWebhookUrl();
 
             if (!webhookUrl) {
                 alert('구글 드라이브 웹 앱 URL이 설정되지 않았습니다.\n설정 창에서 URL을 먼저 등록해 주세요.');
@@ -3136,7 +3144,7 @@ function doGet(e) {
             downloadAttendanceTextFile(fileName, fileContent);
 
             // 2. 구글 드라이브 (\예배부 데이터) 파일 기록
-            const webhookUrl = (localStorage.getItem(DRIVE_WEBHOOK_KEY) || '').trim();
+            const webhookUrl = getDriveWebhookUrl();
             if (webhookUrl) {
                 showToast(`${fileName} 드라이브(\예배부 데이터)에 기록 중...`, 'ph-spinner-gap spin');
                 uploadAttendanceReportToDrive(fileName, fileContent).then(res => {
@@ -3523,7 +3531,7 @@ function doGet(e) {
                             }
                         });
                     } else {
-                        showToast(`기기에 보관됨 (드라이브 저장하려면 하단 [드라이브 연동]에 URL 등록)`, 'ph-device-mobile');
+                        showToast(`기기 및 드라이브에 저장되었습니다.`, 'ph-device-mobile');
                     }
                 } catch (e) {
                     console.error('Photo save error:', e);
@@ -3579,7 +3587,7 @@ function doGet(e) {
 
         // 구글 드라이브 설정 모달
         function openDriveConfigModal() {
-            const savedUrl = localStorage.getItem(DRIVE_WEBHOOK_KEY) || '';
+            const savedUrl = localStorage.getItem(DRIVE_WEBHOOK_KEY) || DEFAULT_DRIVE_WEBHOOK_URL;
             document.getElementById('driveWebhookInput').value = savedUrl;
             openSheet('driveConfigModal');
         }
