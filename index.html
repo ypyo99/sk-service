@@ -1103,7 +1103,7 @@
         /* Attendance */
         .att-tabs {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(4, 1fr);
             gap: 4px;
             padding: 4px;
             border-radius: 16px;
@@ -2069,6 +2069,7 @@
                 <button onclick="selectAttService('att1')" id="attTab-att1"></button>
                 <button onclick="selectAttService('att2')" id="attTab-att2"></button>
                 <button onclick="selectAttService('att3')" id="attTab-att3"></button>
+                <button onclick="selectAttService('attDawn')" id="attTab-attDawn"></button>
             </div>
 
             <div class="att-total">
@@ -2555,7 +2556,8 @@ function doGet(e) {
             attendance: {
                 att1: { male: 0, female: 0, broadcast: 0 },
                 att2: { male: 0, female: 0, broadcast: 0 },
-                att3: { male: 0, female: 0, broadcast: 0 }
+                att3: { male: 0, female: 0, broadcast: 0 },
+                attDawn: { male: 0, female: 0, broadcast: 0 }
             }
         };
 
@@ -2602,6 +2604,7 @@ function doGet(e) {
             if (srvKey === 'service1') appState.currentAttTab = 'att1';
             if (srvKey === 'service2') appState.currentAttTab = 'att2';
             if (srvKey === 'afternoon') appState.currentAttTab = 'att3';
+            if (srvKey === 'dawn') appState.currentAttTab = 'attDawn';
             wasComplete = isServiceComplete();
             saveState();
             renderAll();
@@ -2736,7 +2739,7 @@ function doGet(e) {
 
             // 5. 하단 버튼
             document.getElementById('bottomBtn-all').classList.toggle('active', appState.selectedCategory === 'ALL');
-            const grandAtt = getServiceSubtotal('att1') + getServiceSubtotal('att2') + getServiceSubtotal('att3');
+            const grandAtt = getServiceSubtotal('att1') + getServiceSubtotal('att2') + getServiceSubtotal('att3') + getServiceSubtotal('attDawn');
             document.getElementById('bottomAttBadge').textContent = grandAtt;
         }
 
@@ -2922,7 +2925,8 @@ function doGet(e) {
             const tabs = [
                 { key: 'att1', label: '1부' },
                 { key: 'att2', label: '2부' },
-                { key: 'att3', label: '오후' }
+                { key: 'att3', label: '오후' },
+                { key: 'attDawn', label: '특새' }
             ];
             tabs.forEach(t => {
                 const btn = document.getElementById(`attTab-${t.key}`);
@@ -2955,29 +2959,33 @@ function doGet(e) {
                     </div>
                 </div>`).join('');
 
-            const s1 = appState.attendance.att1;
-            const s2 = appState.attendance.att2;
-            const s3 = appState.attendance.att3;
+            const s1 = appState.attendance.att1 || { male: 0, female: 0, broadcast: 0 };
+            const s2 = appState.attendance.att2 || { male: 0, female: 0, broadcast: 0 };
+            const s3 = appState.attendance.att3 || { male: 0, female: 0, broadcast: 0 };
+            const sd = appState.attendance.attDawn || { male: 0, female: 0, broadcast: 0 };
             const sub1 = getServiceSubtotal('att1');
             const sub2 = getServiceSubtotal('att2');
             const sub3 = getServiceSubtotal('att3');
-            const grand = sub1 + sub2 + sub3;
+            const subd = getServiceSubtotal('attDawn');
+            const grand = sub1 + sub2 + sub3 + subd;
 
             const dateStr = document.getElementById('currentDateText').textContent;
             document.getElementById('attendanceSummaryPreview').textContent =
                 `[예배부 출석체크] ${dateStr}\n` +
-                `• 1부: ${sub1}명 (남자 ${s1.male} / 여자 ${s1.female} / 인터넷 ${s1.broadcast})\n` +
-                `• 2부: ${sub2}명 (남자 ${s2.male} / 여자 ${s2.female} / 인터넷 ${s2.broadcast})\n` +
-                `• 오후: ${sub3}명 (남자 ${s3.male} / 여자 ${s3.female} / 인터넷 ${s3.broadcast})\n` +
+                `• 1부: ${sub1}명 (남자 ${s1.male || 0} / 여자 ${s1.female || 0} / 인터넷 ${s1.broadcast || 0})\n` +
+                `• 2부: ${sub2}명 (남자 ${s2.male || 0} / 여자 ${s2.female || 0} / 인터넷 ${s2.broadcast || 0})\n` +
+                `• 오후: ${sub3}명 (남자 ${s3.male || 0} / 여자 ${s3.female || 0} / 인터넷 ${s3.broadcast || 0})\n` +
+                `• 특새: ${subd}명 (남자 ${sd.male || 0} / 여자 ${sd.female || 0} / 인터넷 ${sd.broadcast || 0})\n` +
                 `▶ 총계: ${grand}명 (방송실, 성가대 포함, 인터넷 예배 포함)`;
         }
 
         function resetAttendance() {
-            if (!confirm('1부·2부·오후 출석 인원을 모두 0으로 초기화할까요?')) return;
+            if (!confirm('1부·2부·오후·특새 출석 인원을 모두 0으로 초기화할까요?')) return;
             appState.attendance = {
                 att1: { male: 0, female: 0, broadcast: 0 },
                 att2: { male: 0, female: 0, broadcast: 0 },
-                att3: { male: 0, female: 0, broadcast: 0 }
+                att3: { male: 0, female: 0, broadcast: 0 },
+                attDawn: { male: 0, female: 0, broadcast: 0 }
             };
             saveState();
             renderAttendanceModal();
@@ -3012,7 +3020,7 @@ function doGet(e) {
 
         // 출석 집계표 텍스트 생성
         function generateAttendanceReportContent() {
-            const srvMap = { att1: '1부예배', att2: '2부예배', att3: '오후예배' };
+            const srvMap = { att1: '1부예배', att2: '2부예배', att3: '오후예배', attDawn: '특별새벽기도' };
             const curTab = appState.currentAttTab || 'att1';
             const srvTitle = srvMap[curTab] || '1부예배';
             const curData = appState.attendance[curTab] || { male: 0, female: 0, broadcast: 0 };
