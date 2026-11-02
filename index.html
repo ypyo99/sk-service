@@ -3319,8 +3319,12 @@ function doGet(e) {
 
         // 구글 드라이브 업로드
         async function uploadPhotoToDrive(photoRecord) {
-            const webhookUrl = (localStorage.getItem(DRIVE_WEBHOOK_KEY) || '').trim();
-            if (!webhookUrl) return false;
+            const webhookUrl = getDriveWebhookUrl();
+            if (!webhookUrl) {
+                photoRecord.syncError = '웹 앱 URL 미설정';
+                await savePhotoRecord(photoRecord);
+                return false;
+            }
 
             try {
                 const payload = {
@@ -3351,9 +3355,9 @@ function doGet(e) {
                     await savePhotoRecord(photoRecord);
                     return false;
                 }
-            } catch (err) {
-                console.error('Drive upload failed:', err);
-                photoRecord.syncError = err.message;
+                        } catch (err) {
+                console.error('Drive photo upload failed:', err);
+                photoRecord.syncError = err.message || '네트워크 오류';
                 await savePhotoRecord(photoRecord);
                 return false;
             }
@@ -3381,7 +3385,7 @@ function doGet(e) {
         }
 
         function updateDriveBannerStatus() {
-            const url = (localStorage.getItem(DRIVE_WEBHOOK_KEY) || '').trim();
+            const url = getDriveWebhookUrl();
             const bannerInfo = document.getElementById('driveBannerStatus');
             const bannerText = document.getElementById('driveBannerText');
             const driveIcon = document.getElementById('driveStatusIcon');
@@ -3450,6 +3454,7 @@ function doGet(e) {
                             ${statusHtml}
                             <div class="photo-card-actions">
                                 <button class="photo-act-btn del" onclick="confirmDeletePhoto('${p.id}')"><i class="ph-bold ph-trash"></i>삭제</button>
+                                ${(!p.synced && !p.isUploading) ? `<button class="photo-act-btn" style="color:var(--accent)" onclick="retryUploadPhoto('${p.id}')"><i class="ph-bold ph-cloud-arrow-up"></i>드라이브 저장</button>` : ''}
                                 ${driveActionBtn}
                             </div>
                         </div>
@@ -3508,7 +3513,7 @@ function doGet(e) {
                     renderChecklist();
 
                     // 구글 드라이브 URL이 설정되어 있다면 즉시 비동기 업로드 진행
-                    const webhookUrl = (localStorage.getItem(DRIVE_WEBHOOK_KEY) || '').trim();
+                    const webhookUrl = getDriveWebhookUrl();
                     if (webhookUrl) {
                         record.isUploading = true;
                         renderPhotoModalList();
@@ -3516,9 +3521,13 @@ function doGet(e) {
                             record.isUploading = false;
                             renderPhotoModalList();
                             if (success) {
-                                showToast(`구글 드라이브 (\예배부 데이터\사진) 저장 완료!`, 'ph-cloud-check');
+                                showToast(`구글 드라이브 (\\예배부 데이터\\사진) 저장 완료! ✨`, 'ph-cloud-check');
+                            } else {
+                                showToast(`드라이브 저장 실패: ${record.syncError || '오류'}`, 'ph-warning-circle');
                             }
                         });
+                    } else {
+                        showToast(`기기에 보관됨 (드라이브 저장하려면 하단 [드라이브 연동]에 URL 등록)`, 'ph-device-mobile');
                     }
                 } catch (e) {
                     console.error('Photo save error:', e);
