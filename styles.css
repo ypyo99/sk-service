@@ -303,40 +303,45 @@
         }
 
         .hero-service-row {
-            margin-top: 16px;
+            margin-top: 12px;
             display: flex;
             align-items: stretch;
-            gap: 8px;
+            gap: 6px;
+            height: 48px;
         }
 
         .hero-service-row .seg {
             margin-top: 0;
             flex: 1;
             min-width: 0;
+            height: 100%;
         }
 
         .seg {
-            margin-top: 16px;
+            margin-top: 0;
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 4px;
+            gap: 3px;
             background: rgba(0, 0, 0, .25);
-            padding: 4px;
-            border-radius: 16px;
+            padding: 3px;
+            border-radius: 13px;
+            box-sizing: border-box;
+            height: 48px;
         }
 
-        /* 1부/2부 오른쪽 성경구절 & 성가대 버튼 (크기 완벽 동일화) */
+        /* 1부/2부 오른쪽 성경구절 & 성가대 버튼 (세그먼트와 완벽히 동일한 높이·크기 통일) */
         .verse-open-btn,
         .choir-open-btn {
             flex-shrink: 0;
-            width: 68px;
+            width: 62px;
+            height: 100%;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 3px;
-            padding: 8px 4px;
-            border-radius: 16px;
+            gap: 1px;
+            padding: 0;
+            border-radius: 13px;
             cursor: pointer;
             transition: all .18s;
             box-shadow: 0 2px 8px rgba(0, 0, 0, .15);
@@ -364,15 +369,16 @@
         }
 
         .verse-open-btn i {
-            font-size: 19px;
+            font-size: 16px;
             color: var(--gold);
         }
 
         .verse-open-btn span,
         .choir-open-btn span {
-            font-size: 12px;
+            font-size: 11.5px;
             font-weight: 800;
             letter-spacing: -.02em;
+            line-height: 1.1;
         }
 
         /* 성가대 덕담 버튼 */
@@ -390,50 +396,73 @@
         }
 
         .choir-open-btn i {
-            font-size: 19px;
+            font-size: 16px;
             color: #fb7185;
         }
 
         @media (max-width: 440px) {
             .hero-service-row {
                 gap: 5px;
+                height: 44px;
+            }
+            .seg {
+                height: 44px;
+                padding: 2.5px;
+                border-radius: 11px;
+                gap: 2.5px;
             }
             .verse-open-btn,
             .choir-open-btn {
-                width: 58px;
-                padding: 6px 2px;
-                border-radius: 13px;
-                gap: 2px;
+                width: 54px;
+                height: 100%;
+                border-radius: 11px;
             }
             .verse-open-btn i,
             .choir-open-btn i {
-                font-size: 16px;
+                font-size: 15px;
             }
             .verse-open-btn span,
             .choir-open-btn span {
-                font-size: 11px;
+                font-size: 10.5px;
             }
             .seg button {
-                padding: 8px 2px;
-                font-size: 13.5px;
+                font-size: 12.5px;
             }
             .seg button i {
-                font-size: 16px;
+                font-size: 15px;
             }
         }
 
         @media (max-width: 360px) {
             .hero-service-row {
-                gap: 4px;
+                gap: 3px;
+                height: 40px;
+            }
+            .seg {
+                height: 40px;
+                padding: 2px;
+                border-radius: 10px;
+                gap: 2px;
             }
             .verse-open-btn,
             .choir-open-btn {
-                width: 50px;
-                padding: 5px 1px;
+                width: 46px;
+                height: 100%;
+                border-radius: 10px;
+            }
+            .verse-open-btn i,
+            .choir-open-btn i {
+                font-size: 13px;
             }
             .verse-open-btn span,
             .choir-open-btn span {
-                font-size: 10px;
+                font-size: 9.5px;
+            }
+            .seg button {
+                font-size: 11px;
+            }
+            .seg button i {
+                font-size: 13px;
             }
         }
 
@@ -713,20 +742,23 @@
         }
 
         .seg button {
-            padding: 10px 4px;
-            border-radius: 12px;
-            font-size: 15px;
+            height: 100%;
+            padding: 2px 2px;
+            border-radius: 10px;
+            font-size: 13.5px;
             font-weight: 700;
             color: rgba(255, 255, 255, .7);
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 2px;
+            justify-content: center;
+            gap: 1px;
             transition: all .18s;
+            box-sizing: border-box;
         }
 
         .seg button i {
-            font-size: 18px;
+            font-size: 16px;
         }
 
         .seg button.active {
@@ -737,20 +769,20 @@
         }
 
         .progress-card {
-            margin-top: 14px;
+            margin-top: 10px;
             display: flex;
             align-items: center;
-            gap: 14px;
+            gap: 12px;
             background: rgba(255, 255, 255, .08);
             border: 1px solid rgba(255, 255, 255, .12);
-            border-radius: var(--radius);
-            padding: 12px 14px;
+            border-radius: 16px;
+            padding: 8px 12px;
         }
 
         .ring {
             position: relative;
-            width: 64px;
-            height: 64px;
+            width: 52px;
+            height: 52px;
             flex-shrink: 0;
         }
 
@@ -784,7 +816,7 @@
             inset: 0;
             display: grid;
             place-items: center;
-            font-size: 16px;
+            font-size: 14px;
             font-weight: 900;
         }
 
@@ -794,7 +826,7 @@
         }
 
         .pc-title {
-            font-size: 17px;
+            font-size: 16px;
             font-weight: 800;
         }
 
