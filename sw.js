@@ -1,10 +1,16 @@
-const CACHE_NAME = 'sk-worship-v1';
+const CACHE_NAME = 'sk-worship-v2';
 const STATIC_ASSETS = [
   './',
   './index.html',
+  './styles.css',
+  './js/data.js',
+  './js/drive.js',
+  './js/ai.js',
+  './js/app.js',
   './manifest.json',
   './icon-192.png',
   './icon-512.png',
+  './성광교회로고.jpg',
   'https://unpkg.com/@phosphor-icons/web@2.1.1/src/bold/style.css',
   'https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css'
 ];
@@ -28,6 +34,7 @@ self.addEventListener('activate', (event) => {
       return Promise.all(
         keys.map((key) => {
           if (key !== CACHE_NAME) {
+            console.log('Deleting old cache:', key);
             return caches.delete(key);
           }
         })
@@ -47,7 +54,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // 앱 내부 자원은 네트워크 우선, 실패 시 캐시 폴백
+  // 앱 내부 자원은 네트워크 우선, 실패 시 캐시 폴백 (빠른 반응과 오프라인 동시 만족)
   event.respondWith(
     fetch(event.request)
       .then((response) => {
@@ -64,4 +71,3 @@ self.addEventListener('fetch', (event) => {
       })
   );
 });
-
