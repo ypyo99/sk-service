@@ -2817,3 +2817,30 @@
         .input-text:focus {
             border-color: var(--accent);
         }
+
+        /* 모달 상단 미니 버튼 (API 키 설정 등) */
+        .pill-btn-sm {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            border-radius: 999px;
+            background: #f1f5f9;
+            color: var(--ink-2);
+            border: 1px solid var(--line);
+            font-size: 11.5px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all .15s;
+        }
+
+        .pill-btn-sm:hover {
+            background: #e2e8f0;
+            color: var(--ink);
+        }
+
+        .pill-btn-sm.active-key {
+            background: #eef2ff;
+            color: var(--accent);
+            border-color: #c7d2fe;
+        }

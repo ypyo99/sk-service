@@ -1,4 +1,4 @@
-const CACHE_NAME = 'sk-worship-v2';
+const CACHE_NAME = 'sk-worship-v3';
 const STATIC_ASSETS = [
   './',
   './index.html',

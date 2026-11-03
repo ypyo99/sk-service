@@ -1042,8 +1042,3 @@ const BIBLE_VERSES = [
                             "prayer": "예수님의 은혜와 아버지 하나님의 사랑과 성령님의 친밀한 교통하심이 우리 예배위원들과 성도들에게 영원토록 함께하옵소서."
                   }
         ]
-
-        let currentActiveVerse = null;
-        let currentBibleVerseIndex = -1;
-        let isFetchingVerseAI = false;
-

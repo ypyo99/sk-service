@@ -249,7 +249,12 @@
         <div class="dialog choir-dialog">
             <div class="choir-dialog-top">
                 <div class="choir-badge" id="choirModalBadge"><i class="ph-bold ph-music-notes"></i> 성가대 격려 덕담</div>
-                <button class="close-btn" onclick="closeChoirQuoteModal()" aria-label="닫기"><i class="ph-bold ph-x"></i></button>
+                <div style="display:flex; align-items:center; gap:6px;">
+                    <button type="button" class="pill-btn-sm" id="choirApiKeyBtn" onclick="openGeminiApiKeyModal()" title="Gemini API 키 설정">
+                        <i class="ph-bold ph-key"></i><span id="choirApiKeyBtnText">API 키</span>
+                    </button>
+                    <button class="close-btn" onclick="closeChoirQuoteModal()" aria-label="닫기"><i class="ph-bold ph-x"></i></button>
+                </div>
             </div>
 
             <div class="choir-meeting-info">
@@ -307,7 +312,12 @@
         <div class="dialog verse-dialog">
             <div class="verse-dialog-top">
                 <div class="verse-badge" id="modalVerseBadge"><i class="ph-bold ph-sparkle"></i> 예배위원 기도모임 말씀</div>
-                <button class="close-btn" onclick="closeBibleVerseModal()" aria-label="닫기"><i class="ph-bold ph-x"></i></button>
+                <div style="display:flex; align-items:center; gap:6px;">
+                    <button type="button" class="pill-btn-sm" id="verseApiKeyBtn" onclick="openGeminiApiKeyModal()" title="Gemini API 키 설정">
+                        <i class="ph-bold ph-key"></i><span id="verseApiKeyBtnText">API 키</span>
+                    </button>
+                    <button class="close-btn" onclick="closeBibleVerseModal()" aria-label="닫기"><i class="ph-bold ph-x"></i></button>
+                </div>
             </div>
 
             <div class="verse-meeting-info">
@@ -410,21 +420,30 @@
     <!-- Gemini API Key 설정 모달 -->
     <div id="geminiKeyModal" class="backdrop center hidden"
         onclick="if (event.target === this) closeGeminiApiKeyModal()">
-        <form class="dialog" style="max-width:360px;" autocomplete="off" onsubmit="event.preventDefault(); saveGeminiApiKey();">
+        <form class="dialog" style="max-width:370px;" autocomplete="off" onsubmit="event.preventDefault(); saveGeminiApiKey();">
             <div class="big-icon" style="background:#eef2ff; color:var(--accent);"><i class="ph-bold ph-sparkle"></i>
             </div>
-            <h3 style="font-size:19px;">Gemini AI 덕담 설정</h3>
-            <p style="font-size:13.5px; color:var(--muted); margin-top:6px; line-height:1.45;">실시간 덕담 생성을 위한 Gemini API
-                Key를 입력해 주세요.<br><span style="font-size:12px; color:var(--muted);">(Google AI Studio에서 무료 발급 가능)</span>
+            <h3 style="font-size:19px;">Gemini AI 키 설정</h3>
+            <p style="font-size:13px; color:var(--muted); margin-top:5px; line-height:1.45;">
+                실시간 맞춤 덕담과 성경구절 생성을 위해 본인의 Gemini API Key를 입력해 주세요.<br>
+                <span id="geminiKeyStatusText" style="font-size:12px; font-weight:700; color:var(--accent); display:inline-block; margin-top:4px;"></span>
             </p>
-            <div style="margin:16px 0; text-align:left;">
-                <input type="password" id="geminiApiKeyInput" name="gemini_api_key_field" autocomplete="new-password" class="input-text" placeholder="AIzaSy... API 키 붙여넣기"
-                    style="width:100%; box-sizing:border-box;" />
+            <div style="margin:14px 0 10px; text-align:left; position:relative;">
+                <input type="password" id="geminiApiKeyInput" name="gemini_api_key_field" autocomplete="new-password" class="input-text" placeholder="AIzaSy... 키 붙여넣기"
+                    style="width:100%; box-sizing:border-box; padding-right:40px;" />
+                <button type="button" onclick="toggleApiKeyVisibility()" style="position:absolute; right:8px; top:50%; transform:translateY(-50%); background:none; border:none; color:var(--muted); cursor:pointer; padding:4px;" title="키 보기/숨기기">
+                    <i id="apiKeyEyeIcon" class="ph-bold ph-eye" style="font-size:18px;"></i>
+                </button>
+            </div>
+            <div style="margin-bottom:14px; text-align:center;">
+                <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" style="font-size:12px; color:var(--accent); text-decoration:underline; font-weight:600;">
+                    <i class="ph-bold ph-arrow-square-out"></i> Google AI Studio에서 무료 API Key 발급받기
+                </a>
             </div>
             <div class="btn-row">
                 <button type="button" class="big-btn ghost" onclick="closeGeminiApiKeyModal()">취소</button>
-                <button type="submit" class="big-btn primary"><i
-                        class="ph-bold ph-check"></i>저장하기</button>
+                <button type="button" class="big-btn red" id="geminiKeyDeleteBtn" onclick="clearGeminiApiKey()" style="display:none;"><i class="ph-bold ph-trash"></i>삭제</button>
+                <button type="submit" class="big-btn primary"><i class="ph-bold ph-check"></i>저장하기</button>
             </div>
         </form>
     </div>
