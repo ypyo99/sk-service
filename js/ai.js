@@ -5,12 +5,15 @@
 const GEMINI_API_KEY_STORAGE = 'GEMINI_API_KEY';
 const DEFAULT_GEMINI_API_KEY = ''; // 하드코딩 배제: 사용자 직접 입력값만 안전하게 사용
 
-// Gemini 공식 모델 목록 (안정성이 가장 높은 1.5 Flash 최우선)
+// Gemini 공식 모델 목록 (사용자 요청: 초고속 최신 gemini-3.5-flash-lite 계열 최우선)
 const GEMINI_MODELS = [
-    'gemini-1.5-flash',
+    'gemini-3.5-flash-lite',
+    'gemini-3.1-flash-lite',
+    'gemini-2.5-flash-lite',
+    'gemini-2.0-flash-lite',
+    'gemini-2.5-flash',
     'gemini-2.0-flash',
-    'gemini-1.5-flash-8b',
-    'gemini-1.5-pro'
+    'gemini-1.5-flash'
 ];
 
 // 오프라인 / API 키 미등록 또는 오류 시 순환 표시할 성가대 맞춤 덕담 프리셋 라이브러리
@@ -189,7 +192,10 @@ async function callGeminiApi(prompt, systemInstruction = '') {
 
             const res = await fetch(endpoint, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'x-goog-api-key': apiKey
+                },
                 body: JSON.stringify(reqBody)
             });
 
