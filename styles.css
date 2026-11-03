@@ -325,21 +325,24 @@
             border-radius: 16px;
         }
 
-        /* 1부/2부 오른쪽 성경구절 & 성가대 버튼 */
+        /* 1부/2부 오른쪽 성경구절 & 성가대 버튼 (크기 완벽 동일화) */
         .verse-open-btn,
         .choir-open-btn {
             flex-shrink: 0;
+            width: 68px;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             gap: 3px;
-            padding: 8px 10px;
+            padding: 8px 4px;
             border-radius: 16px;
             cursor: pointer;
             transition: all .18s;
             box-shadow: 0 2px 8px rgba(0, 0, 0, .15);
             white-space: nowrap;
+            box-sizing: border-box;
+            text-align: center;
         }
 
         .verse-open-btn {
@@ -397,7 +400,8 @@
             }
             .verse-open-btn,
             .choir-open-btn {
-                padding: 6px 7px;
+                width: 58px;
+                padding: 6px 2px;
                 border-radius: 13px;
                 gap: 2px;
             }
@@ -424,7 +428,8 @@
             }
             .verse-open-btn,
             .choir-open-btn {
-                padding: 5px 4px;
+                width: 50px;
+                padding: 5px 1px;
             }
             .verse-open-btn span,
             .choir-open-btn span {
