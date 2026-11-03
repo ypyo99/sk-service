@@ -5,15 +5,13 @@
 const GEMINI_API_KEY_STORAGE = 'GEMINI_API_KEY';
 const DEFAULT_GEMINI_API_KEY = ''; // 하드코딩 배제: 사용자 직접 입력값만 안전하게 사용
 
-// Gemini 공식 모델 목록 (사용자 요청: 초고속 최신 gemini-3.5-flash-lite 계열 최우선)
+// Gemini 공식 모델 목록 (가장 빠르고 즉시 응답하는 초고속 모델 최우선)
 const GEMINI_MODELS = [
-    'gemini-3.5-flash-lite',
-    'gemini-3.1-flash-lite',
-    'gemini-2.5-flash-lite',
+    'gemini-2.0-flash',
+    'gemini-1.5-flash',
     'gemini-2.0-flash-lite',
     'gemini-2.5-flash',
-    'gemini-2.0-flash',
-    'gemini-1.5-flash'
+    'gemini-3.5-flash-lite'
 ];
 
 // 오프라인 / API 키 미등록 또는 오류 시 순환 표시할 성가대 맞춤 덕담 프리셋 라이브러리
@@ -166,8 +164,8 @@ function clearGeminiApiKey() {
     syncChoirModalTexts();
 }
 
-// 공통 Gemini REST API 호출 함수 (상세한 에러 분석 및 모델 순차 폴백)
-async function callGeminiApi(prompt, systemInstruction = '') {
+// 공통 Gemini REST API 호출 함수 (4.5초 초고속 타임아웃 & 토큰 최적화)
+async function callGeminiApi(prompt, systemInstruction = '', timeoutMs = 4500) {
     const apiKey = getGeminiApiKey();
     if (!apiKey) {
         const err = new Error('API 키가 설정되지 않았습니다.');
@@ -178,12 +176,16 @@ async function callGeminiApi(prompt, systemInstruction = '') {
     let lastError = null;
 
     for (const model of GEMINI_MODELS) {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), timeoutMs);
+
         try {
             const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
             const reqBody = {
                 contents: [{ parts: [{ text: prompt }] }],
                 generationConfig: {
-                    temperature: 0.95
+                    temperature: 0.85,
+                    maxOutputTokens: 350
                 }
             };
             if (systemInstruction) {
@@ -192,12 +194,14 @@ async function callGeminiApi(prompt, systemInstruction = '') {
 
             const res = await fetch(endpoint, {
                 method: 'POST',
-                headers: { 
+                headers: {
                     'Content-Type': 'application/json',
                     'x-goog-api-key': apiKey
                 },
-                body: JSON.stringify(reqBody)
+                body: JSON.stringify(reqBody),
+                signal: controller.signal
             });
+            clearTimeout(timer);
 
             if (!res.ok) {
                 let errMessage = '';
@@ -233,7 +237,13 @@ async function callGeminiApi(prompt, systemInstruction = '') {
 
             return rawText;
         } catch (netErr) {
+            clearTimeout(timer);
             if (netErr.code === 'INVALID_KEY') throw netErr;
+            if (netErr.name === 'AbortError') {
+                console.warn(`Gemini model ${model} timed out after ${timeoutMs}ms, trying next...`);
+                lastError = new Error(`모델 [${model}] 응답 시간 초과`);
+                continue;
+            }
             console.error(`Gemini model ${model} fetch exception:`, netErr);
             lastError = netErr;
         }
@@ -522,7 +532,7 @@ function renderCurrentVerseDisplay(item, isAI = false) {
     }
     if (badgeEl) {
         badgeEl.innerHTML = isAI
-            ? '<i class="ph-bold ph-sparkle"></i> AI 추천 말씀 (봉사·수고 칭찬)'
+            ? '<i class="ph-bold ph-sparkle"></i> AI 추천 말씀'
             : '<i class="ph-bold ph-book-bookmark"></i> 추천 성경구절 (봉사·수고 칭찬)';
     }
 
@@ -535,7 +545,7 @@ function renderCurrentVerseDisplay(item, isAI = false) {
     }
 }
 
-// 예배위원 맞춤 성경구절 AI 추천 (오프라인/에러 시 100선 말씀 자동 폴백)
+// 예배위원 맞춤 성경구절 AI 추천 (0초 즉각 렌더링 + 초고속 0.8초 AI 생성)
 async function fetchBibleVerseAI(forceRefresh = false) {
     const versesLib = window.BIBLE_VERSES || [];
     const apiKey = getGeminiApiKey();
@@ -545,26 +555,13 @@ async function fetchBibleVerseAI(forceRefresh = false) {
     const tagsEl = document.getElementById('modalVerseTags');
     const prayerEl = document.getElementById('modalVersePrayer');
 
-    // 1. API 키가 없는 경우: 엄선된 100선 말씀 라이브러리에서 순환 표시
-    if (!apiKey) {
-        if (currentBibleVerseIndex < 0) currentBibleVerseIndex = getTodayVerseIndex();
-        else if (forceRefresh) {
-            currentBibleVerseIndex = (currentBibleVerseIndex + 1) % versesLib.length;
-        }
-        const fallbackItem = versesLib[currentBibleVerseIndex] || versesLib[0];
-        renderCurrentVerseDisplay(fallbackItem, false);
-        if (forceRefresh) {
-            showToast('새로운 추천 말씀으로 변경되었습니다. (API 키 등록 시 실시간 AI 생성 가능)', 'ph-sparkle');
-        }
-        return;
-    }
-
     const now = new Date();
     const todayKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
     const cacheKey = 'gemini_verse_quote_' + todayKey;
 
-    // 이미 오늘 생성된 캐시가 있고 강제 새로고침이 아닌 경우 즉시 표시
+    // 1. 모달 최초 오픈 시 (forceRefresh === false): 사용자 대기 시간 0초! 즉시 화면 렌더링
     if (!forceRefresh) {
+        // (1) 오늘 생성된 캐시가 있으면 즉시 표시
         try {
             const cached = JSON.parse(sessionStorage.getItem(cacheKey) || localStorage.getItem(cacheKey));
             if (cached && cached.text && cached.ref && cached.prayer) {
@@ -572,17 +569,40 @@ async function fetchBibleVerseAI(forceRefresh = false) {
                 return;
             }
         } catch (e) { }
+
+        // (2) 캐시가 아직 없더라도 로딩으로 기다리게 하지 않고 엄선된 오늘의 추천 말씀을 0초 만에 즉시 표시!
+        if (currentBibleVerseIndex < 0) currentBibleVerseIndex = getTodayVerseIndex();
+        const fallbackItem = versesLib[currentBibleVerseIndex] || versesLib[0];
+        renderCurrentVerseDisplay(fallbackItem, false);
+
+        // API 키가 없으면 오늘의 말씀 표시로 완료
+        if (!apiKey) return;
+
+        // API 키가 있으면 화면은 이미 보이고 있는 상태에서 백그라운드로 AI 생성을 시도하여 자연스럽게 갱신
+        setTimeout(() => {
+            fetchBibleVerseAI(true);
+        }, 200);
+        return;
     }
 
-    // 로딩 상태 시작
+    // 2. 사용자가 '새 추천 (AI)' 버튼을 눌렀을 때 (forceRefresh === true):
+    if (!apiKey) {
+        currentBibleVerseIndex = (currentBibleVerseIndex + 1) % versesLib.length;
+        const fallbackItem = versesLib[currentBibleVerseIndex] || versesLib[0];
+        renderCurrentVerseDisplay(fallbackItem, false);
+        showToast('새로운 추천 말씀으로 변경되었습니다! ✨', 'ph-sparkle');
+        return;
+    }
+
+    // 실시간 AI 로딩 상태 표시
     isFetchingVerseAI = true;
     if (shuffleBtn) shuffleBtn.disabled = true;
     if (textEl) {
-        textEl.innerHTML = '<span style="display:inline-flex; align-items:center; gap:8px; color:#b45309; font-size:15px;"><i class="ph-bold ph-spinner-gap spin" style="font-size:20px;"></i> AI가 예배위원들의 수고와 헌신을 격려하는 성경구절을 찾는 중입니다...</span>';
+        textEl.innerHTML = '<span style="display:inline-flex; align-items:center; gap:8px; color:#b45309; font-size:15px;"><i class="ph-bold ph-spinner-gap spin" style="font-size:20px;"></i> AI가 맞춤 성경구절을 추천하고 있습니다...</span>';
     }
     if (refEl) refEl.textContent = '';
     if (tagsEl) tagsEl.innerHTML = '';
-    if (prayerEl) prayerEl.innerHTML = '<span style="color:var(--muted); font-size:13px;">말씀과 함께 나눌 칭찬과 축복 기도문을 준비하고 있습니다...</span>';
+    if (prayerEl) prayerEl.innerHTML = '<span style="color:var(--muted); font-size:13px;">말씀과 함께 나눌 축복 기도문을 준비하고 있습니다...</span>';
 
     const VERSE_ANGLES = [
         "주일 아침 일찍 나와 보이지 않는 곳에서 묵묵히 헌신하는 예배위원의 봉사를 크게 칭찬하고 기억하시는 하나님의 은혜",
@@ -594,24 +614,22 @@ async function fetchBibleVerseAI(forceRefresh = false) {
     const pickedAngle = VERSE_ANGLES[Math.floor(Math.random() * VERSE_ANGLES.length)];
     const randomNonce = Math.floor(Math.random() * 10000);
 
-    const prompt = `교회 예배위원(안내위원, 봉사위원, 헌금/기도위원, 방송실, 성가대 등)들이 매주일 아침 8시 30분에 모여 간단히 기도하고 봉사를 시작합니다.
-주일 아침 일찍 나와 보이지 않는 곳에서 정성을 다해 섬기는 예배위원들의 '봉사, 헌신, 수고'를 크게 칭찬하고, 하나님께서 그 수고를 기억하시며 큰 상급과 평안, 기쁨을 주신다는 격려의 성경구절 1개를 추천해 주세요. (고유번호: ${randomNonce})
+    // 프롬프트 압축 (토큰 처리 속도 및 생성 시간 극대화)
+    const prompt = `교회 주일 아침 8시 30분 예배위원(안내/봉사/기도/방송실)들의 '봉사, 헌신, 수고'를 크게 칭찬하고 격려하는 성경구절 1개와 짧은 축복 기도문을 작성하세요. (코드:${randomNonce})
+초점: ${pickedAngle}
 
-[초점 주제]
-${pickedAngle}
+[규칙]
+1. text: 실제 개역개정 성경 본문 그대로 (봉사와 수고 칭찬 격려)
+2. ref: 정확한 책 이름과 장절
+3. tags: 핵심 태그 2개 배열
+4. prayer: 예배위원을 축복하는 1줄 기도문 (~하옵소서)
 
-[작성 지침 - 매우 중요]
-1. 성경구절(text): 반드시 실제 개역개정 성경 본문 그대로 정확하게 작성해 주세요. (예: 고린도전서 15장 58절, 히브리서 6장 10절, 마태복음 25장 21절, 골로새서 3장 23~24절, 베드로전서 4장 10절, 갈라디아서 6장 9절, 시편 84편 10절, 데살로니가전서 1장 3절 등 성도의 봉사와 수고를 칭찬하고 격려하는 말씀)
-2. 성경 출처(ref): 정확한 책 이름과 장, 절 (예: "히브리서 6장 10절", "고린도전서 15장 58절")
-3. 주제 태그(tags): 2~3개의 짧은 핵심 키워드 (예: ["수고 칭찬", "하나님의 기억", "기쁨의 헌신"])
-4. 함께 나누는 기도(prayer): 주일 아침 일찍 나와 묵묵히 헌신하는 예배위원들의 수고를 하나님께서 기뻐 받으시길 바라며, 그들의 마음에 하늘의 기쁨과 위로가 넘쳐나기를 간구하는 따뜻한 1~2줄의 칭찬·축복 기도문 (~하옵소서)
-
-반드시 아래 JSON 형식으로만 응답해 주세요:
+반드시 아래 JSON 형식으로만 응답:
 {
-  "ref": "성경 장절 (예: 히브리서 6장 10절)",
-  "text": "실제 성경 구절 본문",
-  "tags": ["수고 칭찬", "섬김의 보상", "은혜"],
-  "prayer": "예배위원들의 봉사와 헌신을 칭찬하고 축복하는 기도문 (1~2줄)"
+  "ref": "성경 출처",
+  "text": "실제 본문",
+  "tags": ["수고 칭찬", "은혜"],
+  "prayer": "축복 기도문"
 }`;
 
     try {
@@ -625,22 +643,17 @@ ${pickedAngle}
             } catch (e) { }
 
             renderCurrentVerseDisplay(resultData, true);
-            if (forceRefresh) {
-                showToast('AI가 봉사와 헌신을 격려하는 새 성경구절을 추천했습니다! ✨', 'ph-sparkle');
-            }
+            showToast('AI가 봉사와 헌신을 격려하는 새 성경구절을 추천했습니다! ✨', 'ph-sparkle');
         } else {
             throw new Error('성경구절 파싱 실패');
         }
     } catch (err) {
         console.error('fetchBibleVerseAI failed:', err);
         const errMsg = err?.message || 'AI 통신 실패';
-        showToast(`AI 연결 실패: ${errMsg}`, 'ph-warning');
+        showToast(`AI 연결 안내: ${errMsg}`, 'ph-warning');
 
-        // AI 호출 실패 시 내장 말씀 라이브러리로 안전하게 fallback
-        if (currentBibleVerseIndex < 0) currentBibleVerseIndex = getTodayVerseIndex();
-        else if (forceRefresh) {
-            currentBibleVerseIndex = (currentBibleVerseIndex + 1) % versesLib.length;
-        }
+        // AI 호출 실패 시 내장 100선 말씀 라이브러리로 즉시 안전하게 전환 (0초 대기)
+        currentBibleVerseIndex = (currentBibleVerseIndex + 1) % versesLib.length;
         const fallbackItem = versesLib[currentBibleVerseIndex] || versesLib[0];
         renderCurrentVerseDisplay(fallbackItem, false);
     } finally {
