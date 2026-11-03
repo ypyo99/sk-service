@@ -327,6 +327,19 @@
             opacity: .6;
         }
 
+        .hero-service-row {
+            margin-top: 16px;
+            display: flex;
+            align-items: stretch;
+            gap: 8px;
+        }
+
+        .hero-service-row .seg {
+            margin-top: 0;
+            flex: 1;
+            min-width: 0;
+        }
+
         .seg {
             margin-top: 16px;
             display: grid;
@@ -335,6 +348,190 @@
             background: rgba(0, 0, 0, .25);
             padding: 4px;
             border-radius: 16px;
+        }
+
+        /* 1부/2부 오른쪽 성경구절 버튼 */
+        .verse-open-btn {
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 3px;
+            padding: 8px 12px;
+            background: linear-gradient(135deg, rgba(251, 191, 36, 0.22) 0%, rgba(245, 158, 11, 0.12) 100%);
+            border: 1px solid rgba(251, 191, 36, 0.45);
+            border-radius: 16px;
+            color: #fef3c7;
+            cursor: pointer;
+            transition: all .18s;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, .15);
+            white-space: nowrap;
+        }
+
+        .verse-open-btn:hover {
+            background: linear-gradient(135deg, rgba(251, 191, 36, 0.35) 0%, rgba(245, 158, 11, 0.22) 100%);
+            border-color: rgba(251, 191, 36, 0.75);
+            color: #ffffff;
+            transform: translateY(-1px);
+        }
+
+        .verse-open-btn:active {
+            transform: scale(0.96);
+        }
+
+        .verse-open-btn i {
+            font-size: 19px;
+            color: var(--gold);
+        }
+
+        .verse-open-btn span {
+            font-size: 12.5px;
+            font-weight: 800;
+            letter-spacing: -.02em;
+        }
+
+        @media (max-width: 440px) {
+            .hero-service-row {
+                gap: 6px;
+            }
+            .verse-open-btn {
+                padding: 6px 9px;
+                border-radius: 14px;
+            }
+            .verse-open-btn i {
+                font-size: 17px;
+            }
+            .verse-open-btn span {
+                font-size: 11.5px;
+            }
+        }
+
+        /* 성경구절 모달 스타일 */
+        .verse-dialog {
+            max-width: 430px;
+            width: 92%;
+            border-radius: 24px;
+            padding: 22px 20px;
+            background: #ffffff;
+            box-shadow: 0 20px 45px rgba(0, 0, 0, 0.25);
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            text-align: left;
+        }
+
+        .verse-dialog-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .verse-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 11px;
+            border-radius: 999px;
+            background: #fef3c7;
+            color: #b45309;
+            font-size: 12.5px;
+            font-weight: 800;
+        }
+
+        .verse-meeting-info {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            color: var(--muted);
+            margin-bottom: 14px;
+            font-weight: 600;
+        }
+
+        .verse-card {
+            background: linear-gradient(145deg, #fffdf5 0%, #fef3c7 100%);
+            border: 1.5px solid #fde68a;
+            border-radius: 18px;
+            padding: 18px 16px 14px;
+            margin-bottom: 12px;
+            position: relative;
+            box-shadow: 0 3px 10px rgba(245, 158, 11, 0.08);
+        }
+
+        .verse-quote-icon {
+            font-size: 26px;
+            color: rgba(217, 119, 6, 0.35);
+            line-height: 1;
+            margin-bottom: 6px;
+        }
+
+        .verse-text {
+            font-size: 16.5px;
+            line-height: 1.65;
+            color: #78350f;
+            font-weight: 700;
+            word-break: keep-all;
+            letter-spacing: -0.015em;
+        }
+
+        .verse-ref {
+            margin-top: 12px;
+            text-align: right;
+            font-size: 14px;
+            font-weight: 800;
+            color: #b45309;
+        }
+
+        .verse-tags {
+            display: flex;
+            gap: 6px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+
+        .vtag {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.88);
+            color: #92400e;
+            border: 1px solid rgba(217, 119, 6, 0.22);
+        }
+
+        .verse-prayer-box {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            border-radius: 14px;
+            padding: 12px 14px;
+            margin-bottom: 16px;
+        }
+
+        .vpb-title {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12.5px;
+            font-weight: 800;
+            color: #166534;
+            margin-bottom: 4px;
+        }
+
+        .vpb-text {
+            font-size: 13.5px;
+            line-height: 1.55;
+            color: #14532d;
+            font-weight: 600;
+            word-break: keep-all;
+        }
+
+        .verse-btn-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
         }
 
         .seg button {
@@ -2486,14 +2683,20 @@
                 </div>
             </div>
 
-            <div class="seg">
-                <button onclick="selectService('service1')" id="srv-service1"><i
-                        class="ph-bold ph-number-circle-one"></i>1부</button>
-                <button onclick="selectService('service2')" id="srv-service2"><i
-                        class="ph-bold ph-number-circle-two"></i>2부</button>
-                <button onclick="selectService('afternoon')" id="srv-afternoon"><i
-                        class="ph-bold ph-sun"></i>오후</button>
-                <button onclick="selectService('dawn')" id="srv-dawn"><i class="ph-bold ph-sun-horizon"></i>특새</button>
+            <div class="hero-service-row">
+                <div class="seg">
+                    <button onclick="selectService('service1')" id="srv-service1"><i
+                            class="ph-bold ph-number-circle-one"></i>1부</button>
+                    <button onclick="selectService('service2')" id="srv-service2"><i
+                            class="ph-bold ph-number-circle-two"></i>2부</button>
+                    <button onclick="selectService('afternoon')" id="srv-afternoon"><i
+                            class="ph-bold ph-sun"></i>오후</button>
+                    <button onclick="selectService('dawn')" id="srv-dawn"><i class="ph-bold ph-sun-horizon"></i>특새</button>
+                </div>
+                <button class="verse-open-btn" onclick="openBibleVerseModal()" title="예배위원 기도모임 성경구절 (매주일 8:30)">
+                    <i class="ph-bold ph-book-open-text"></i>
+                    <span>성경구절</span>
+                </button>
             </div>
 
             <div class="progress-card">
@@ -2653,6 +2856,39 @@
                             전달</strong>합니다.</span></li>
             </ol>
             <button class="big-btn dark" style="width:100%" onclick="closeOfferingManualModal()">확인했습니다</button>
+        </div>
+    </div>
+
+    <!-- 예배위원 8:30 기도모임 성경구절 모달 -->
+    <div id="bibleVerseModal" class="backdrop center hidden"
+        onclick="if (event.target === this) closeBibleVerseModal()">
+        <div class="dialog verse-dialog">
+            <div class="verse-dialog-top">
+                <div class="verse-badge"><i class="ph-bold ph-book-open-text"></i> 예배위원 기도모임 말씀</div>
+                <button class="close-btn" onclick="closeBibleVerseModal()" aria-label="닫기"><i class="ph-bold ph-x"></i></button>
+            </div>
+
+            <div class="verse-meeting-info">
+                <i class="ph-bold ph-clock"></i> 매주일 <b>오전 8시 30분</b> 기도모임 나눔
+            </div>
+
+            <div class="verse-card">
+                <div class="verse-quote-icon"><i class="ph-fill ph-quotes"></i></div>
+                <div class="verse-text" id="modalVerseText">"말씀을 불러오는 중입니다..."</div>
+                <div class="verse-ref" id="modalVerseRef">— 성경구절 —</div>
+                <div class="verse-tags" id="modalVerseTags"></div>
+            </div>
+
+            <div class="verse-prayer-box">
+                <div class="vpb-title"><i class="ph-bold ph-hands-praying"></i> 함께 나누는 기도</div>
+                <div class="vpb-text" id="modalVersePrayer"></div>
+            </div>
+
+            <div class="btn-row verse-btn-row">
+                <button class="big-btn ghost" onclick="shuffleBibleVerse()"><i class="ph-bold ph-arrows-clockwise"></i>다른 말씀</button>
+                <button class="big-btn green" onclick="copyBibleVerse()"><i class="ph-bold ph-copy"></i>말씀 복사</button>
+            </div>
+            <button class="big-btn dark" style="width:100%; margin-top:8px;" onclick="closeBibleVerseModal()"><i class="ph-bold ph-check"></i>아멘 (닫기)</button>
         </div>
     </div>
 
@@ -4832,6 +5068,199 @@ function deleteDrivePhoto(fileId, fileName) {
             showToast('덕담 문구가 복사되었습니다.', 'ph-copy');
         }
 
+        // ==========================================
+        // 예배위원 8:30 기도모임 성경구절 (용기, 평안, 기쁨, 섬김)
+        // ==========================================
+        const BIBLE_VERSES = [
+            {
+                ref: '이사야 40장 31절',
+                text: '오직 여호와를 앙망하는 자는 새 힘을 얻으리니 독수리가 날개치며 올라감 같을 것이요 달음박질하여도 곤비하지 아니하겠고 걸어가도 피곤하지 아니하리로다',
+                tags: ['새 힘', '용기', '소망'],
+                prayer: '오늘 주님의 전에 나아오는 모든 성도들을 기쁨으로 맞이하며, 우리 마음에 먼저 주님의 평안과 새 힘이 가득하길 기도합니다.'
+            },
+            {
+                ref: '여호수아 1장 9절',
+                text: '내가 네게 명령한 것이 아니냐 강하고 담대하라 두려워하지 말며 놀라지 말라 네가 어디로 가든지 네 하나님 여호와가 너와 함께 하느니라',
+                tags: ['용기', '담대함', '동행'],
+                prayer: '예배를 돕고 안내하는 모든 순간마다 하나님께서 친히 함께하심을 믿고 담대하고 기쁜 마음으로 섬기게 하옵소서.'
+            },
+            {
+                ref: '빌립보서 4장 13절',
+                text: '내게 능력 주시는 자 안에서 내가 모든 것을 할 수 있느니라',
+                tags: ['능력', '믿음', '용기'],
+                prayer: '내 힘이 아닌 주님이 공급하시는 능력으로 맡겨진 안내와 봉사의 직분을 온전히 감당하게 하옵소서.'
+            },
+            {
+                ref: '요한복음 14장 27절',
+                text: '평안을 너희에게 끼치노니 곧 나의 평안을 너희에게 주노라 내가 너희에게 주는 것은 세상이 주는 것과 같지 아니하니라 너희는 마음에 근심하지도 말고 두려워하지도 말라',
+                tags: ['평안', '위로', '안식'],
+                prayer: '세상이 줄 수 없는 참된 평안을 우리 예배위원들에게 부어주사, 성도들에게도 그 따뜻한 평안이 전해지게 하옵소서.'
+            },
+            {
+                ref: '빌립보서 4장 6~7절',
+                text: '아무 것도 염려하지 말고 다만 모든 일에 기도와 간구로, 너희 구할 것을 감사함으로 하나님께 아뢰라 그리하면 모든 지각에 뛰어난 하나님의 평강이 그리스도 예수 안에서 너희 마음과 생각을 지키시리라',
+                tags: ['평강', '감사', '기도'],
+                prayer: '마음의 모든 분주함과 염려를 내려놓고 감사함으로 주님을 예배하며 하나님의 평강이 마음을 지키게 하옵소서.'
+            },
+            {
+                ref: '데살로니가전서 5장 16~18절',
+                text: '항상 기뻐하라 쉬지 말고 기도하라 범사에 감사하라 이것이 그리스도 예수 안에서 너희를 향하신 하나님의 뜻이니라',
+                tags: ['기쁨', '기도', '감사'],
+                prayer: '예배를 준비하고 안내하는 손길마다 기쁨과 기도가 넘치며 범사에 감사하는 복된 주일이 되게 하옵소서.'
+            },
+            {
+                ref: '시편 84편 10절',
+                text: '주의 궁정에서의 한 날이 다른 곳에서의 천 날보다 나은즉 악인의 장막에 사는 것보다 내 하나님의 성전 문지기로 있는 것이 좋사오니',
+                tags: ['예배의 기쁨', '문지기', '섬김'],
+                prayer: '주님의 성전에서 예배를 돕는 문지기로 섬길 수 있는 은혜에 감사하며, 성도 한 분 한 분을 주님의 사랑으로 영접하게 하옵소서.'
+            },
+            {
+                ref: '골로새서 3장 23~24절',
+                text: '무슨 일을 하든지 마음을 다하여 주께 하듯 하고 사람에게 하듯 하지 말라 이는 기업의 상을 주께 받을 줄 아나니 너희는 주 그리스도를 섬기느니라',
+                tags: ['정성', '섬김', '상급'],
+                prayer: '눈에 띄지 않는 작은 일 하나도 주님께 하듯 정성을 다해 섬기며 하나님의 크신 위로와 상급을 바라보게 하옵소서.'
+            },
+            {
+                ref: '느헤미야 8장 10절',
+                text: '여호와로 인하여 기뻐하는 것이 너희의 힘이니라',
+                tags: ['기쁨', '힘', '은혜'],
+                prayer: '주님을 예배하고 섬기는 기쁨이 우리의 가장 큰 힘이 되어 피곤함 없이 기쁨으로 예배를 섬기게 하옵소서.'
+            },
+            {
+                ref: '시편 100편 2절',
+                text: '기쁨으로 여호와를 섬기며 노래하면서 그의 앞에 나아갈지어다',
+                tags: ['기쁨', '찬양', '섬김'],
+                prayer: '억지나 의무가 아닌 기쁨과 감격으로 하나님을 섬기며 주님의 전을 아름답게 가꾸어가게 하옵소서.'
+            },
+            {
+                ref: '시편 28편 7절',
+                text: '여호와는 나의 힘과 나의 방패이시니 내 마음이 그를 의지하여 도움을 얻었도다 그러므로 내 마음이 크게 기뻐하며 내 노래로 그를 찬송하리로다',
+                tags: ['방패', '도움', '찬송'],
+                prayer: '우리의 힘과 방패 되시는 하나님을 굳게 의지하여 기쁨과 찬양으로 승리하는 주일이 되게 하옵소서.'
+            },
+            {
+                ref: '고린도전서 15장 58절',
+                text: '그러므로 내 사랑하는 형제들아 견실하며 흔들리지 말고 항상 주의 일에 더욱 힘쓰는 자들이 되라 이는 너희 수고가 주 안에서 헛되지 않은 줄 앎이라',
+                tags: ['견실함', '수고', '열매'],
+                prayer: '주일마다 일찍 나와 준비하는 예배부원들의 모든 보이지 않는 수고가 주 안에서 결코 헛되지 않음을 기억하게 하옵소서.'
+            },
+            {
+                ref: '베드로전서 4장 10~11절',
+                text: '각각 은사를 받은 대로 하나님의 여러 가지 은혜를 맡은 선한 청지기 같이 서로 봉사하라... 누가 봉사하려면 하나님이 공급하시는 힘으로 하는 것 같이 하라',
+                tags: ['청지기', '봉사', '은혜'],
+                prayer: '선한 청지기의 겸손한 마음으로 서로 돕고 화합하며, 하나님이 공급하시는 힘으로 즐거이 봉사하게 하옵소서.'
+            },
+            {
+                ref: '민수기 6장 24~26절',
+                text: '여호와는 네게 복을 주시고 너를 지키시기를 원하며 여호와는 그의 얼굴을 네게 비추사 은혜 베푸시기를 원하며 여호와는 그 얼굴을 네게로 향하여 드사 평강 주시기를 원하노라',
+                tags: ['축복', '은혜', '평강'],
+                prayer: '하나님의 축복과 평강이 우리 예배위원 가정과 성광교회 모든 성도들의 삶에 가득 넘쳐나기를 간절히 기도합니다.'
+            },
+            {
+                ref: '시편 118편 24절',
+                text: '이 날은 여호와께서 정하신 것이라 이 날에 우리가 즐거워하고 기뻐하리로다',
+                tags: ['주일', '기쁨', '즐거움'],
+                prayer: '하나님께서 정하신 거룩한 주일, 모인 성도들과 함께 참된 안식과 기쁨을 누리는 복된 시간이 되게 하옵소서.'
+            },
+            {
+                ref: '갈라디아서 6장 9절',
+                text: '우리가 선을 행하되 낙심하지 말지니 포기하지 아니하면 때가 이르매 거두리라',
+                tags: ['인내', '선행', '결실'],
+                prayer: '지치지 않는 사랑과 인내로 성도들을 섬기며, 하나님의 때에 아름다운 은혜의 열매를 맺게 하옵소서.'
+            },
+            {
+                ref: '로마서 15장 13절',
+                text: '소망의 하나님이 모든 기쁨과 평강을 믿음 안에서 너희에게 충만하게 하사 성령의 능력으로 소망이 넘치게 하시기를 원하노라',
+                tags: ['소망', '기쁨', '성령'],
+                prayer: '소망의 하나님께서 우리 심령에 기쁨과 평강을 부어주사 만나는 모든 사람에게 주님의 소망을 흘려보내게 하옵소서.'
+            },
+            {
+                ref: '시편 23편 1~2절',
+                text: '여호와는 나의 목자시니 내게 부족함이 없으리로다 그가 나를 푸른 풀밭에 누이시며 쉴 만한 물 가로 인도하시는도다',
+                tags: ['목자', '부족함 없음', '인도'],
+                prayer: '선한 목자 되신 주님의 품 안에서 영혼의 참된 쉼을 얻고 힘차게 성도들을 섬기게 하옵소서.'
+            },
+            {
+                ref: '마태복음 11장 28절',
+                text: '수고하고 무거운 짐 진 자들아 다 내게로 오라 내가 너희를 쉬게 하리라',
+                tags: ['쉼', '안식', '위로'],
+                prayer: '세상살이에 지친 성도들이 교회 문을 들어설 때 주님의 품과 같은 따뜻한 위로와 안식을 경험하게 하옵소서.'
+            },
+            {
+                ref: '에베소서 6장 7절',
+                text: '기쁜 마음으로 섬기기를 주께 하듯 하고 사람들에게 하듯 하지 말라',
+                tags: ['기쁜 마음', '섬김', '헌신'],
+                prayer: '밝은 미소와 따뜻한 인사로 예배의 문을 활짝 열어 성도들이 은혜의 보좌 앞으로 나아가도록 돕게 하옵소서.'
+            }
+        ];
+
+        let currentBibleVerseIndex = -1;
+
+        function getTodayVerseIndex() {
+            const now = new Date();
+            const seed = now.getFullYear() * 10000 + (now.getMonth() + 1) * 100 + now.getDate();
+            return Math.abs(seed) % BIBLE_VERSES.length;
+        }
+
+        function renderCurrentVerse() {
+            if (currentBibleVerseIndex < 0 || currentBibleVerseIndex >= BIBLE_VERSES.length) {
+                currentBibleVerseIndex = getTodayVerseIndex();
+            }
+            const item = BIBLE_VERSES[currentBibleVerseIndex];
+            const textEl = document.getElementById('modalVerseText');
+            const refEl = document.getElementById('modalVerseRef');
+            const tagsEl = document.getElementById('modalVerseTags');
+            const prayerEl = document.getElementById('modalVersePrayer');
+
+            if (textEl) textEl.textContent = `"${item.text}"`;
+            if (refEl) refEl.textContent = `— ${item.ref} —`;
+            if (prayerEl) prayerEl.textContent = item.prayer;
+            if (tagsEl) {
+                tagsEl.innerHTML = item.tags.map(t => `<span class="vtag"><i class="ph-bold ph-heart"></i>${t}</span>`).join('');
+            }
+        }
+
+        function openBibleVerseModal() {
+            buzz(8);
+            if (currentBibleVerseIndex < 0) {
+                currentBibleVerseIndex = getTodayVerseIndex();
+            }
+            renderCurrentVerse();
+            openSheet('bibleVerseModal');
+        }
+
+        function closeBibleVerseModal() {
+            closeSheet('bibleVerseModal');
+        }
+
+        function shuffleBibleVerse() {
+            buzz(10);
+            let nextIdx;
+            do {
+                nextIdx = Math.floor(Math.random() * BIBLE_VERSES.length);
+            } while (nextIdx === currentBibleVerseIndex && BIBLE_VERSES.length > 1);
+            currentBibleVerseIndex = nextIdx;
+            renderCurrentVerse();
+            showToast('새로운 성경구절과 기도문으로 변경되었습니다! ✨', 'ph-sparkle');
+        }
+
+        function copyBibleVerse() {
+            buzz(12);
+            const item = BIBLE_VERSES[currentBibleVerseIndex];
+            if (!item) return;
+            const textToCopy = `📖 [성광교회 예배부 기도모임 말씀]\n\n"${item.text}"\n— ${item.ref} —\n\n🙏 함께 나누는 기도:\n${item.prayer}`;
+            
+            let ok = false;
+            try {
+                if (navigator.clipboard && window.isSecureContext) {
+                    navigator.clipboard.writeText(textToCopy);
+                    ok = true;
+                }
+            } catch (e) { }
+            if (!ok && typeof legacyCopy === 'function') ok = legacyCopy(textToCopy);
+            showToast('말씀과 기도문이 복사되었습니다! 카톡에 공유해보세요 📋', 'ph-check');
+        }
+
         function isFirstSunday(d = new Date()) {
             return d.getDay() === 0 && d.getDate() >= 1 && d.getDate() <= 7;
         }
@@ -4973,7 +5402,8 @@ function deleteDrivePhoto(fileId, fileName) {
                 if (e.key === 'ArrowRight') { viewerNextPhoto(); return; }
             }
             if (e.key !== 'Escape') return;
-            if (!document.getElementById('photoViewerModal').classList.contains('hidden')) closePhotoViewer();
+            if (!document.getElementById('bibleVerseModal').classList.contains('hidden')) closeBibleVerseModal();
+            else if (!document.getElementById('photoViewerModal').classList.contains('hidden')) closePhotoViewer();
             else if (!document.getElementById('geminiKeyModal').classList.contains('hidden')) closeGeminiApiKeyModal();
             else if (!document.getElementById('firstSundayModal').classList.contains('hidden')) closeFirstSundayModal();
             else if (!document.getElementById('photoModal').classList.contains('hidden')) closePhotoModal();
