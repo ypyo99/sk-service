@@ -2844,3 +2844,13 @@
             color: var(--accent);
             border-color: #c7d2fe;
         }
+
+        @keyframes updatedPulse {
+            0% { transform: scale(0.97); opacity: 0.5; }
+            50% { transform: scale(1.02); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .updated-pulse {
+            animation: updatedPulse 0.45s ease-out;
+        }

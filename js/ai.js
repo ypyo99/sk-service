@@ -3,9 +3,17 @@
 // ==========================================
 
 const GEMINI_API_KEY_STORAGE = 'GEMINI_API_KEY';
-const DEFAULT_GEMINI_API_KEY = ''; // 하드코딩 배제: 사용자 직접 입력값만 사용
+const DEFAULT_GEMINI_API_KEY = ''; // 하드코딩 배제: 사용자 직접 입력값만 안전하게 사용
 
-// 오프라인 / API 키 미등록 시 순환 표시할 성가대 맞춤 덕담 프리셋 라이브러리
+// Gemini 공식 모델 목록 (안정성이 가장 높은 1.5 Flash 최우선)
+const GEMINI_MODELS = [
+    'gemini-1.5-flash',
+    'gemini-2.0-flash',
+    'gemini-1.5-flash-8b',
+    'gemini-1.5-pro'
+];
+
+// 오프라인 / API 키 미등록 또는 오류 시 순환 표시할 성가대 맞춤 덕담 프리셋 라이브러리
 const CHOIR_PRESET_QUOTES = [
     {
         theme: "정성과 감사의 찬양",
@@ -36,14 +44,20 @@ const CHOIR_PRESET_QUOTES = [
         theme: "평안과 위로를 주는 하모니",
         service1: "이른 아침 목소리를 모아 주님을 찬양하는 손길에 하나님의 복이 넘치길 바라요!",
         service2: "성가대원들의 밝은 미소와 화음 덕분에 우리 예배가 더욱 은혜로워져요!"
+    },
+    {
+        theme: "영혼을 울리는 은혜의 소리",
+        service1: "주일 첫 예배를 감동적인 하모니로 따뜻하게 감싸주셔서 감사해요!",
+        service2: "가슴 뭉클한 찬양 소리에 한 주간의 모든 피로가 씻은 듯 사라졌어요!"
     }
 ];
 
 let currentChoirPresetIndex = 0;
 
-// API 키 가져오기 (오직 localStorage에 사용자가 등록한 값 사용)
+// API 키 가져오기 (오직 localStorage에 사용자가 등록한 값 사용, 공백/따옴표/줄바꿈 완벽 정제)
 function getGeminiApiKey() {
-    return (localStorage.getItem(GEMINI_API_KEY_STORAGE) || DEFAULT_GEMINI_API_KEY || '').trim();
+    const raw = localStorage.getItem(GEMINI_API_KEY_STORAGE) || DEFAULT_GEMINI_API_KEY || '';
+    return raw.replace(/["'\r\n\s]/g, '').trim();
 }
 
 // 상단 헤더 버튼의 API 키 등록 상태 배지 갱신
@@ -80,7 +94,7 @@ function openGeminiApiKeyModal() {
             statusText.textContent = '✅ 본인의 Gemini API 키가 기기에 안전하게 등록되어 있습니다.';
             statusText.style.color = '#059669';
         } else {
-            statusText.textContent = '⚠️ API 키가 등록되지 않았습니다. 키를 입력하시면 실시간 AI 생성이 활성화됩니다.';
+            statusText.textContent = '⚠️ API 키가 등록되지 않았습니다. Google AI Studio(aistudio.google.com)에서 발급받은 키를 입력하시면 실시간 AI 생성이 활성화됩니다.';
             statusText.style.color = '#d97706';
         }
     }
@@ -110,15 +124,17 @@ function toggleApiKeyVisibility() {
     }
 }
 
-// API 키 저장
+// API 키 저장 (공백/따옴표/줄바꿈 완벽 정제)
 function saveGeminiApiKey() {
     const input = document.getElementById('geminiApiKeyInput');
-    const val = (input ? input.value : '').trim();
-    if (!val) {
+    const rawVal = (input ? input.value : '');
+    const cleanKey = rawVal.replace(/["'\r\n\s]/g, '').trim();
+
+    if (!cleanKey) {
         showToast('API 키를 입력해 주세요.', 'ph-warning');
         return;
     }
-    localStorage.setItem(GEMINI_API_KEY_STORAGE, val);
+    localStorage.setItem(GEMINI_API_KEY_STORAGE, cleanKey);
     closeGeminiApiKeyModal();
     updateApiKeyButtons();
     showToast('Gemini API 키가 안전하게 저장되었습니다! ✨', 'ph-check-circle');
@@ -147,6 +163,129 @@ function clearGeminiApiKey() {
     syncChoirModalTexts();
 }
 
+// 공통 Gemini REST API 호출 함수 (상세한 에러 분석 및 모델 순차 폴백)
+async function callGeminiApi(prompt, systemInstruction = '') {
+    const apiKey = getGeminiApiKey();
+    if (!apiKey) {
+        const err = new Error('API 키가 설정되지 않았습니다.');
+        err.code = 'NO_KEY';
+        throw err;
+    }
+
+    let lastError = null;
+
+    for (const model of GEMINI_MODELS) {
+        try {
+            const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+            const reqBody = {
+                contents: [{ parts: [{ text: prompt }] }],
+                generationConfig: {
+                    temperature: 0.95
+                }
+            };
+            if (systemInstruction) {
+                reqBody.systemInstruction = { parts: [{ text: systemInstruction }] };
+            }
+
+            const res = await fetch(endpoint, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(reqBody)
+            });
+
+            if (!res.ok) {
+                let errMessage = '';
+                try {
+                    const errJson = await res.json();
+                    errMessage = errJson?.error?.message || JSON.stringify(errJson);
+                } catch (e) {
+                    errMessage = await res.text();
+                }
+                console.error(`Gemini API [${model}] failed (${res.status}):`, errMessage);
+
+                if (res.status === 400 || res.status === 403) {
+                    // 키가 잘못되었거나 만료되었거나 비활성화됨
+                    const err = new Error('API 키가 올바르지 않거나 권한이 없습니다. (Google AI Studio 키 확인)');
+                    err.code = 'INVALID_KEY';
+                    err.status = res.status;
+                    throw err; // 다른 모델도 동일 키이므로 즉시 탈출
+                } else if (res.status === 429) {
+                    lastError = new Error('호출 한도(Quota)가 초과되었습니다. 잠시 후 다시 시도해 주세요.');
+                    lastError.code = 'QUOTA_EXCEEDED';
+                } else {
+                    lastError = new Error(`모델 [${model}] 응답 오류 (${res.status})`);
+                }
+                continue;
+            }
+
+            const data = await res.json();
+            const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (!rawText) {
+                lastError = new Error('AI 응답 내용이 비어 있습니다.');
+                continue;
+            }
+
+            return rawText;
+        } catch (netErr) {
+            if (netErr.code === 'INVALID_KEY') throw netErr;
+            console.error(`Gemini model ${model} fetch exception:`, netErr);
+            lastError = netErr;
+        }
+    }
+
+    throw lastError || new Error('AI 모델 연결에 실패했습니다.');
+}
+
+// 텍스트에서 안전하게 JSON 파싱
+function parseJsonFromText(rawText) {
+    if (!rawText) return null;
+    let text = rawText.replace(/```json\s*|```/gi, '').trim();
+    const match = text.match(/\{[\s\S]*\}/);
+    if (match) text = match[0];
+    try {
+        return JSON.parse(text);
+    } catch (e) {
+        console.warn('JSON direct parse failed, trying regex fallback:', e);
+        try {
+            const s1Match = text.match(/"service1"\s*:\s*"([^"]+)"/);
+            const s2Match = text.match(/"service2"\s*:\s*"([^"]+)"/);
+            const themeMatch = text.match(/"theme"\s*:\s*"([^"]+)"/);
+            if (s1Match && s2Match) {
+                return {
+                    service1: s1Match[1],
+                    service2: s2Match[1],
+                    theme: themeMatch ? themeMatch[1] : ''
+                };
+            }
+        } catch (reErr) { }
+        return null;
+    }
+}
+
+// 성가대 모달 UI 카드 텍스트 직접 반영 및 반짝임 효과
+function updateChoirModalUi(s1, s2) {
+    const m1 = document.getElementById('modalQuoteS1');
+    const m2 = document.getElementById('modalQuoteS2');
+    const cards = document.querySelectorAll('.choir-card');
+
+    if (m1) m1.textContent = `"${s1.replace(/^"|"$/g, '').trim()}"`;
+    if (m2) m2.textContent = `"${s2.replace(/^"|"$/g, '').trim()}"`;
+
+    // 갱신 강조 애니메이션
+    cards.forEach(card => {
+        card.classList.remove('updated-pulse');
+        void card.offsetWidth; // 트리거 리플로우
+        card.classList.add('updated-pulse');
+    });
+}
+
+// 프리셋 라이브러리에서 특정 순번의 덕담을 모달에 적용
+function applyChoirPresetToUi(index) {
+    const item = CHOIR_PRESET_QUOTES[index % CHOIR_PRESET_QUOTES.length];
+    if (!item) return;
+    updateChoirModalUi(item.service1, item.service2);
+}
+
 // 성가대 모달 열기
 function openChoirModal() {
     buzz(8);
@@ -154,14 +293,18 @@ function openChoirModal() {
     syncChoirModalTexts();
     openSheet('choirQuoteModal');
 
-    // API 키가 있고 아직 오늘 생성된 게 없다면 백그라운드 AI 생성 시도
+    // API 키가 있고 아직 오늘 생성된 캐시가 없다면 백그라운드 AI 생성
     const apiKey = getGeminiApiKey();
     if (apiKey) {
         const now = new Date();
         const todayKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
         const cacheKey = 'gemini_choir_quote_' + todayKey;
         if (!sessionStorage.getItem(cacheKey) && !localStorage.getItem(cacheKey)) {
-            generateChoirQuotesAI(false);
+            generateChoirQuotesAI(false).then(res => {
+                if (res && res.service1 && res.service2) {
+                    updateChoirModalUi(res.service1, res.service2);
+                }
+            }).catch(() => { });
         }
     }
 }
@@ -170,7 +313,7 @@ function closeChoirQuoteModal() {
     closeSheet('choirQuoteModal');
 }
 
-// 성가대 모달 텍스트 동기화
+// 성가대 모달 텍스트 동기화 (기본 또는 캐시 로드)
 function syncChoirModalTexts() {
     const now = new Date();
     const todayKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
@@ -186,16 +329,11 @@ function syncChoirModalTexts() {
         }
     } catch (e) { }
 
-    if (!s1 || !s2) {
-        const preset = CHOIR_PRESET_QUOTES[currentChoirPresetIndex % CHOIR_PRESET_QUOTES.length];
-        s1 = preset.service1;
-        s2 = preset.service2;
+    if (s1 && s2) {
+        updateChoirModalUi(s1, s2);
+    } else {
+        applyChoirPresetToUi(currentChoirPresetIndex);
     }
-
-    const m1 = document.getElementById('modalQuoteS1');
-    const m2 = document.getElementById('modalQuoteS2');
-    if (m1) m1.textContent = `"${s1.replace(/^"|"$/g, '').trim()}"`;
-    if (m2) m2.textContent = `"${s2.replace(/^"|"$/g, '').trim()}"`;
 }
 
 function copyChoirQuote(id) {
@@ -223,165 +361,121 @@ async function regenerateChoirQuotes() {
     buzz(10);
     const apiKey = getGeminiApiKey();
 
-    // 1. API 키가 등록되지 않은 경우: 안내 후 모달 자동 오픈 & 프리셋 셔플
-    if (!apiKey) {
-        currentChoirPresetIndex = (currentChoirPresetIndex + 1) % CHOIR_PRESET_QUOTES.length;
-        syncChoirModalTexts();
-        showToast('Gemini API 키를 등록하시면 AI가 실시간으로 새로운 덕담을 만듭니다.', 'ph-key');
-        setTimeout(() => {
-            openGeminiApiKeyModal();
-        }, 300);
-        return;
-    }
-
-    // 2. API 키가 있는 경우: 로딩 스피너 작동 및 AI 실시간 생성
     const loadingBox = document.getElementById('choirModalLoadingBox');
     const cardsBox = document.getElementById('choirModalCards');
     const regenBtn = document.getElementById('choirModalRegenBtn');
 
+    // 1. API 키가 등록되지 않은 경우: 즉시 다음 추천 프리셋으로 순환하고 안내
+    if (!apiKey) {
+        currentChoirPresetIndex = (currentChoirPresetIndex + 1) % CHOIR_PRESET_QUOTES.length;
+        applyChoirPresetToUi(currentChoirPresetIndex);
+        showToast('Gemini API 키를 등록하시면 AI가 실시간으로 새로운 덕담을 만듭니다.', 'ph-key');
+        setTimeout(() => {
+            openGeminiApiKeyModal();
+        }, 400);
+        return;
+    }
+
+    // 2. API 키가 있는 경우: 로딩 스피너 작동 및 AI 실시간 생성
     if (loadingBox) loadingBox.classList.remove('hidden');
     if (cardsBox) cardsBox.classList.add('hidden');
     if (regenBtn) regenBtn.disabled = true;
 
-    const ok = await generateChoirQuotesAI(true);
-    syncChoirModalTexts();
+    try {
+        const result = await generateChoirQuotesAI(true);
+        if (result && result.service1 && result.service2) {
+            updateChoirModalUi(result.service1, result.service2);
+            showToast('새로운 AI 맞춤 덕담이 생성되었습니다! ✨', 'ph-sparkle');
+        } else {
+            throw new Error('AI 응답 데이터 형식 불일치');
+        }
+    } catch (err) {
+        console.error('regenerateChoirQuotes failed:', err);
+        const errMsg = err?.message || 'AI 통신 실패';
+        showToast(`AI 생성 실패: ${errMsg}`, 'ph-warning');
 
-    if (loadingBox) loadingBox.classList.add('hidden');
-    if (cardsBox) cardsBox.classList.remove('hidden');
-    if (regenBtn) regenBtn.disabled = false;
-
-    if (!ok) {
-        // AI 통신 실패 시 다음 프리셋으로 순환하고 안내
+        // AI 실패 시에도 텍스트가 멈춰있지 않도록 다음 추천 프리셋으로 확실히 전환
         currentChoirPresetIndex = (currentChoirPresetIndex + 1) % CHOIR_PRESET_QUOTES.length;
-        syncChoirModalTexts();
-        showToast('AI 연결이 원활하지 않아 추천 덕담으로 변경되었습니다. (API 키 확인 필요)', 'ph-warning');
+        applyChoirPresetToUi(currentChoirPresetIndex);
+    } finally {
+        if (loadingBox) loadingBox.classList.add('hidden');
+        if (cardsBox) cardsBox.classList.remove('hidden');
+        if (regenBtn) regenBtn.disabled = false;
     }
 }
 
 // Gemini AI를 통한 실시간 맞춤 성가대 덕담 생성
 async function generateChoirQuotesAI(forceRefresh = false) {
     const apiKey = getGeminiApiKey();
-    const loadingBox = document.getElementById('quoteLoadingBox');
-    const noKeyBox = document.getElementById('quoteNoKeyBox');
-    const quotesContainer = document.getElementById('quoteQuotesContainer');
-    const themeEl = document.getElementById('quoteThemeText');
-    const s1El = document.getElementById('quoteTextService1');
-    const s2El = document.getElementById('quoteTextService2');
-    const regenBtn = document.getElementById('quoteRegenBtn');
-
-    if (!apiKey) {
-        if (loadingBox) loadingBox.classList.add('hidden');
-        if (quotesContainer) quotesContainer.classList.add('hidden');
-        if (noKeyBox) noKeyBox.classList.remove('hidden');
-        if (themeEl) themeEl.innerHTML = '<i class="ph-bold ph-sparkle"></i> AI 덕담 생성 대기';
-        return false;
-    }
-
-    if (noKeyBox) noKeyBox.classList.add('hidden');
+    if (!apiKey) return null;
 
     const now = new Date();
     const todayKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
     const cacheKey = 'gemini_choir_quote_' + todayKey;
 
-    // 이미 오늘 생성된 덕담이 있고 강제 새로고침이 아닌 경우 캐시 표시
+    // 이미 오늘 생성된 덕담이 있고 강제 새로고침이 아닌 경우 캐시 반환
     if (!forceRefresh) {
         try {
             const cached = JSON.parse(sessionStorage.getItem(cacheKey) || localStorage.getItem(cacheKey));
             if (cached && cached.service1 && cached.service2) {
-                if (themeEl) themeEl.innerHTML = `<i class="ph-bold ph-sparkle"></i> ${cached.theme || (now.getMonth() + 1) + '월 AI 추천 덕담'}`;
-                if (s1El) s1El.textContent = `"${cached.service1}"`;
-                if (s2El) s2El.textContent = `"${cached.service2}"`;
-                const mq1 = document.getElementById('modalQuoteS1');
-                const mq2 = document.getElementById('modalQuoteS2');
-                if (mq1) mq1.textContent = `"${cached.service1.replace(/^"|"$/g, '').trim()}"`;
-                if (mq2) mq2.textContent = `"${cached.service2.replace(/^"|"$/g, '').trim()}"`;
-                if (quotesContainer) quotesContainer.classList.remove('hidden');
-                if (loadingBox) loadingBox.classList.add('hidden');
-                return true;
+                return cached;
             }
         } catch (e) { }
     }
 
-    // 로딩 상태 시작
-    if (loadingBox) loadingBox.classList.remove('hidden');
-    if (quotesContainer) quotesContainer.classList.add('hidden');
-    if (regenBtn) regenBtn.disabled = true;
+    // 매번 다른 각도와 주제로 신선한 덕담을 유도하는 무작위 힌트 풀
+    const ANGLES_1 = [
+        "이른 아침 피로를 잊게 하는 환한 미소와 정성 어린 찬양",
+        "새벽 첫 시간을 아름다운 화음으로 깨워준 고마움",
+        "주일 아침 가장 먼저 예배당을 거룩한 찬양으로 채워준 수고",
+        "지휘자, 반주자, 대원들이 하나 된 따뜻한 하모니에 대한 감사",
+        "아침 일찍 준비된 찬양이 성도들의 마음에 큰 힘이 되었다는 칭찬"
+    ];
 
+    const ANGLES_2 = [
+        "온 성도의 마음에 큰 감동과 평안을 선물해 준 찬양의 은혜",
+        "한 주간 열심히 기도하고 준비한 정성이 가슴에 와닿았다는 감사",
+        "풍성하고 웅장한 화음으로 예배를 더욱 거룩하게 빛내준 수고",
+        "성도들에게 한 주간을 살아갈 큰 용기와 소망을 안겨준 은혜로운 찬양",
+        "마음을 다해 부른 찬양으로 하나님께 영광 돌린 대원들에 대한 칭찬"
+    ];
+
+    const angle1 = ANGLES_1[Math.floor(Math.random() * ANGLES_1.length)];
+    const angle2 = ANGLES_2[Math.floor(Math.random() * ANGLES_2.length)];
+    const randomNonce = Math.floor(Math.random() * 10000);
     const month = now.getMonth() + 1;
-    const prompt = `오늘 날짜는 ${now.getFullYear()}년 ${month}월입니다. 교회 예배부 사역자가 주일 예배 성가대원들에게 건넬 아주 쉽고 따뜻한 1줄 덕담(격려 문구)을 작성해 주세요.
 
-[작성 지침 - 매우 중요]
+    const prompt = `오늘 날짜는 ${now.getFullYear()}년 ${month}월입니다. 교회 예배부 사역자가 주일 예배 성가대원들에게 건넬 아주 쉽고 따뜻한 1줄 덕담(격려 문구)을 작성해 주세요. (고유번호: ${randomNonce})
+
+[격려 초점]
+- 1부 성가대: ${angle1}
+- 2부 성가대: ${angle2}
+
+[작성 지침 - 절대 준수]
 1. 어려운 한자어나 거창한 문어체(예: '풍성케 하심', '화답하여', '심령', '헌신' 등)는 절대 쓰지 마세요.
 2. 초등학생도 편하게 알아들을 수 있을 만큼 쉽고 다정한 일상 단어만 쓰세요.
-3. 어미는 정중하고 부드러운 존댓말(~감사합니다, ~고맙습니다, ~힘이 돼요 등)로 작성하세요.
-4. 25자 내외로 아주 짧고 산뜻하게 작성하세요.
-- 1부 성가대: 아침 일찍 나와서 찬양해 주신 분들께 쉬운 말로 고마운 마음 전하기 (예: "아침 일찍 정성껏 찬양해 주셔서 정말 감사해요!")
-- 2부 성가대: 오늘 찬양이 참 듣기 좋고 마음에 와닿았다는 칭찬과 고마움 전하기 (예: "오늘 찬양이 참 좋아서 마음에 큰 힘이 돼요!")
+3. 어미는 정중하고 부드러운 존댓말(~감사해요, ~고맙습니다, ~힘이 돼요 등)로 작성하세요.
+4. 각 문장은 20~28자 내외로 아주 짧고 산뜻하게 작성하세요. (따옴표 제외)
 
 반드시 아래 JSON 형식으로만 응답해 주세요:
 {
-  "theme": "${month}월 테마 (쉬운 말로, 예: 고마운 마음 가득한 ${month}월)",
+  "theme": "${month}월 찬양 감사",
   "service1": "1부 덕담 문구",
   "service2": "2부 덕담 문구"
 }`;
 
-    const models = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash'];
-    let resultData = null;
-
-    for (const model of models) {
-        try {
-            const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
-            const res = await fetch(endpoint, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    contents: [{ parts: [{ text: prompt }] }],
-                    generationConfig: {
-                        responseMimeType: 'application/json',
-                        temperature: 0.85
-                    }
-                })
-            });
-
-            if (!res.ok) continue;
-            const data = await res.json();
-            const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-            if (rawText) {
-                resultData = JSON.parse(rawText.replace(/```json|```/g, '').trim());
-                if (resultData && resultData.service1 && resultData.service2) {
-                    break;
-                }
-            }
-        } catch (err) {
-            console.warn(`Model ${model} failed, trying next:`, err);
-        }
-    }
-
-    if (loadingBox) loadingBox.classList.add('hidden');
-    if (regenBtn) regenBtn.disabled = false;
+    const rawText = await callGeminiApi(prompt);
+    const resultData = parseJsonFromText(rawText);
 
     if (resultData && resultData.service1 && resultData.service2) {
-        if (themeEl) themeEl.innerHTML = `<i class="ph-bold ph-sparkle"></i> ${resultData.theme || month + '월 AI 추천 덕담'}`;
-        if (s1El) s1El.textContent = `"${resultData.service1.replace(/^"|"$/g, '').trim()}"`;
-        if (s2El) s2El.textContent = `"${resultData.service2.replace(/^"|"$/g, '').trim()}"`;
-        const mq1 = document.getElementById('modalQuoteS1');
-        const mq2 = document.getElementById('modalQuoteS2');
-        if (mq1) mq1.textContent = `"${resultData.service1.replace(/^"|"$/g, '').trim()}"`;
-        if (mq2) mq2.textContent = `"${resultData.service2.replace(/^"|"$/g, '').trim()}"`;
-        if (quotesContainer) quotesContainer.classList.remove('hidden');
-
         try {
             localStorage.setItem(cacheKey, JSON.stringify(resultData));
             sessionStorage.setItem(cacheKey, JSON.stringify(resultData));
         } catch (e) { }
-
-        if (forceRefresh) {
-            showToast('새로운 AI 맞춤 덕담이 생성되었습니다! ✨', 'ph-sparkle');
-        }
-        return true;
+        return resultData;
     }
 
-    return false;
+    throw new Error('AI 덕담 응답 데이터 파싱 실패');
 }
 
 function copyQuote(elemId) {
@@ -418,17 +512,26 @@ function renderCurrentVerseDisplay(item, isAI = false) {
     if (refEl) refEl.textContent = `— ${item.ref.replace(/^—+|—+$/g, '').trim()} —`;
     if (prayerEl) prayerEl.textContent = item.prayer;
     if (tagsEl && item.tags && Array.isArray(item.tags)) {
-        tagsEl.innerHTML = item.tags.map(t => `<span class="vtag"><i class="ph-bold ph-heart"></i>${t}</span>`).join('');
+        tagsEl.innerHTML = item.tags.map(t => `<span class="vtag">#${t}</span>`).join('');
     }
     if (badgeEl) {
         badgeEl.innerHTML = isAI
-            ? '<i class="ph-bold ph-sparkle"></i> AI 추천 · 예배위원 헌신·수고 격려'
-            : '<i class="ph-bold ph-book-open-text"></i> 예배위원 기도모임 말씀';
+            ? '<i class="ph-bold ph-sparkle"></i> AI 추천 말씀 (봉사·수고 칭찬)'
+            : '<i class="ph-bold ph-book-bookmark"></i> 추천 성경구절 (봉사·수고 칭찬)';
+    }
+
+    // 갱신 애니메이션
+    const vcard = document.querySelector('.verse-card');
+    if (vcard) {
+        vcard.classList.remove('updated-pulse');
+        void vcard.offsetWidth;
+        vcard.classList.add('updated-pulse');
     }
 }
 
-// Gemini API를 통해 예배위원들의 봉사, 헌신, 수고를 칭찬하는 맞춤 성경구절 생성
+// 예배위원 맞춤 성경구절 AI 추천 (오프라인/에러 시 100선 말씀 자동 폴백)
 async function fetchBibleVerseAI(forceRefresh = false) {
+    const versesLib = window.BIBLE_VERSES || [];
     const apiKey = getGeminiApiKey();
     const shuffleBtn = document.getElementById('modalVerseShuffleBtn');
     const textEl = document.getElementById('modalVerseText');
@@ -436,22 +539,16 @@ async function fetchBibleVerseAI(forceRefresh = false) {
     const tagsEl = document.getElementById('modalVerseTags');
     const prayerEl = document.getElementById('modalVersePrayer');
 
-    const versesLib = window.BIBLE_VERSES || [];
-
-    // API 키가 없으면 내장 말씀 라이브러리 사용
+    // 1. API 키가 없는 경우: 엄선된 100선 말씀 라이브러리에서 순환 표시
     if (!apiKey) {
         if (currentBibleVerseIndex < 0) currentBibleVerseIndex = getTodayVerseIndex();
         else if (forceRefresh) {
-            let nextIdx;
-            do {
-                nextIdx = Math.floor(Math.random() * versesLib.length);
-            } while (nextIdx === currentBibleVerseIndex && versesLib.length > 1);
-            currentBibleVerseIndex = nextIdx;
+            currentBibleVerseIndex = (currentBibleVerseIndex + 1) % versesLib.length;
         }
         const fallbackItem = versesLib[currentBibleVerseIndex] || versesLib[0];
         renderCurrentVerseDisplay(fallbackItem, false);
         if (forceRefresh) {
-            showToast('새로운 추천 말씀으로 변경되었습니다. (API 키 등록 시 AI 생성 가능)', 'ph-sparkle');
+            showToast('새로운 추천 말씀으로 변경되었습니다. (API 키 등록 시 실시간 AI 생성 가능)', 'ph-sparkle');
         }
         return;
     }
@@ -481,8 +578,21 @@ async function fetchBibleVerseAI(forceRefresh = false) {
     if (tagsEl) tagsEl.innerHTML = '';
     if (prayerEl) prayerEl.innerHTML = '<span style="color:var(--muted); font-size:13px;">말씀과 함께 나눌 칭찬과 축복 기도문을 준비하고 있습니다...</span>';
 
+    const VERSE_ANGLES = [
+        "주일 아침 일찍 나와 보이지 않는 곳에서 묵묵히 헌신하는 예배위원의 봉사를 크게 칭찬하고 기억하시는 하나님의 은혜",
+        "지치지 않고 기쁨으로 섬길 때 하나님께서 풍성한 상급과 평안을 예비해 두셨다는 격려와 축복",
+        "성도들을 온 마음과 미소로 맞이하며 예배를 돕는 섬김의 손길에 부어주시는 하늘의 복",
+        "하나님의 집에서 한 날 문지기로 섬김이 세상의 천 날보다 낫다는 감사와 거룩한 자부심",
+        "사랑과 봉사로 하나 되어 주님의 몸 된 교회를 든든히 세워가는 거룩한 동역자들의 수고 칭찬"
+    ];
+    const pickedAngle = VERSE_ANGLES[Math.floor(Math.random() * VERSE_ANGLES.length)];
+    const randomNonce = Math.floor(Math.random() * 10000);
+
     const prompt = `교회 예배위원(안내위원, 봉사위원, 헌금/기도위원, 방송실, 성가대 등)들이 매주일 아침 8시 30분에 모여 간단히 기도하고 봉사를 시작합니다.
-주일 아침 일찍 나와 보이지 않는 곳에서 정성을 다해 섬기는 예배위원들의 '봉사, 헌신, 수고'를 크게 칭찬하고, 하나님께서 그 수고를 기억하시며 큰 상급과 평안, 기쁨을 주신다는 격려의 성경구절 1개를 추천해 주세요.
+주일 아침 일찍 나와 보이지 않는 곳에서 정성을 다해 섬기는 예배위원들의 '봉사, 헌신, 수고'를 크게 칭찬하고, 하나님께서 그 수고를 기억하시며 큰 상급과 평안, 기쁨을 주신다는 격려의 성경구절 1개를 추천해 주세요. (고유번호: ${randomNonce})
+
+[초점 주제]
+${pickedAngle}
 
 [작성 지침 - 매우 중요]
 1. 성경구절(text): 반드시 실제 개역개정 성경 본문 그대로 정확하게 작성해 주세요. (예: 고린도전서 15장 58절, 히브리서 6장 10절, 마태복음 25장 21절, 골로새서 3장 23~24절, 베드로전서 4장 10절, 갈라디아서 6장 9절, 시편 84편 10절, 데살로니가전서 1장 3절 등 성도의 봉사와 수고를 칭찬하고 격려하는 말씀)
@@ -498,52 +608,28 @@ async function fetchBibleVerseAI(forceRefresh = false) {
   "prayer": "예배위원들의 봉사와 헌신을 칭찬하고 축복하는 기도문 (1~2줄)"
 }`;
 
-    const models = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash'];
-    let resultData = null;
+    try {
+        const rawText = await callGeminiApi(prompt);
+        const resultData = parseJsonFromText(rawText);
 
-    for (const model of models) {
-        try {
-            const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
-            const res = await fetch(endpoint, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    contents: [{ parts: [{ text: prompt }] }],
-                    generationConfig: {
-                        responseMimeType: 'application/json',
-                        temperature: 0.85
-                    }
-                })
-            });
+        if (resultData && resultData.text && resultData.ref) {
+            try {
+                localStorage.setItem(cacheKey, JSON.stringify(resultData));
+                sessionStorage.setItem(cacheKey, JSON.stringify(resultData));
+            } catch (e) { }
 
-            if (!res.ok) continue;
-            const data = await res.json();
-            const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-            if (rawText) {
-                resultData = JSON.parse(rawText.replace(/```json|```/g, '').trim());
-                if (resultData && resultData.text && resultData.ref && resultData.prayer) {
-                    break;
-                }
+            renderCurrentVerseDisplay(resultData, true);
+            if (forceRefresh) {
+                showToast('AI가 봉사와 헌신을 격려하는 새 성경구절을 추천했습니다! ✨', 'ph-sparkle');
             }
-        } catch (err) {
-            console.warn(`Verse generation with ${model} failed:`, err);
+        } else {
+            throw new Error('성경구절 파싱 실패');
         }
-    }
+    } catch (err) {
+        console.error('fetchBibleVerseAI failed:', err);
+        const errMsg = err?.message || 'AI 통신 실패';
+        showToast(`AI 연결 실패: ${errMsg}`, 'ph-warning');
 
-    isFetchingVerseAI = false;
-    if (shuffleBtn) shuffleBtn.disabled = false;
-
-    if (resultData && resultData.text && resultData.ref) {
-        try {
-            localStorage.setItem(cacheKey, JSON.stringify(resultData));
-            sessionStorage.setItem(cacheKey, JSON.stringify(resultData));
-        } catch (e) { }
-
-        renderCurrentVerseDisplay(resultData, true);
-        if (forceRefresh) {
-            showToast('AI가 봉사와 헌신을 격려하는 새 성경구절을 추천했습니다! ✨', 'ph-sparkle');
-        }
-    } else {
         // AI 호출 실패 시 내장 말씀 라이브러리로 안전하게 fallback
         if (currentBibleVerseIndex < 0) currentBibleVerseIndex = getTodayVerseIndex();
         else if (forceRefresh) {
@@ -551,9 +637,9 @@ async function fetchBibleVerseAI(forceRefresh = false) {
         }
         const fallbackItem = versesLib[currentBibleVerseIndex] || versesLib[0];
         renderCurrentVerseDisplay(fallbackItem, false);
-        if (forceRefresh) {
-            showToast('새로운 추천 말씀으로 변경되었습니다! ✨', 'ph-sparkle');
-        }
+    } finally {
+        isFetchingVerseAI = false;
+        if (shuffleBtn) shuffleBtn.disabled = false;
     }
 }
 
