@@ -1,4 +1,4 @@
-const CACHE_NAME = 'sk-worship-v10';
+const CACHE_NAME = 'sk-worship-v11';
 const STATIC_ASSETS = [
   './',
   './index.html',
@@ -24,7 +24,11 @@ self.addEventListener('install', (event) => {
       });
     })
   );
-  self.skipWaiting();
+  // 바로 교체하지 않고 대기: 앱의 "새 버전이 있어요 - 새로고침" 버튼을 누르면 SKIP_WAITING으로 활성화
+});
+
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') self.skipWaiting();
 });
 
 // 활성화 시 이전 버전 캐시 정리
@@ -54,9 +58,14 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // GET만 캐시 대상 (그 외 요청은 그대로 통과)
+  if (event.request.method !== 'GET') return;
+
   // 앱 내부 자원은 네트워크 우선, 실패 시 캐시 폴백 (빠른 반응과 오프라인 동시 만족)
+  // 같은 출처는 no-cache: 브라우저 HTTP 캐시에 남은 옛 파일 대신 항상 서버에 최신 여부를 확인
+  const sameOrigin = url.origin === self.location.origin;
   event.respondWith(
-    fetch(event.request)
+    fetch(event.request, sameOrigin ? { cache: 'no-cache' } : undefined)
       .then((response) => {
         if (response && response.status === 200 && response.type === 'basic') {
           const responseToCache = response.clone();

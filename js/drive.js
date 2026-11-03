@@ -168,9 +168,10 @@
                         const cache = {};
                         all.forEach(p => {
                             if (!cache[p.itemId]) {
-                                cache[p.itemId] = { count: 0, latestThumb: p.dataUrl || p.thumbUrl || p.driveViewUrl, latestTime: p.createdAt };
+                                cache[p.itemId] = { count: 0, pending: 0, latestThumb: p.dataUrl || p.thumbUrl || p.driveViewUrl, latestTime: p.createdAt };
                             }
                             cache[p.itemId].count += 1;
+                            if (isPhotoPending(p)) cache[p.itemId].pending += 1;
                             if (new Date(p.createdAt) >= new Date(cache[p.itemId].latestTime)) {
                                 cache[p.itemId].latestThumb = p.dataUrl || p.thumbUrl || p.driveViewUrl;
                                 cache[p.itemId].latestTime = p.createdAt;
@@ -307,8 +308,63 @@
             });
         }
 
+        // 드라이브에 아직 올라가지 않은 기기 보관 사진인지
+        function isPhotoPending(p) {
+            return !p.synced && typeof p.dataUrl === 'string' && p.dataUrl.startsWith('data:');
+        }
+
+        // 업로드 상태(저장 중 → 완료/실패)를 DB와 화면에 반영하며 업로드
+        async function uploadPhotoWithStatus(record) {
+            record.isUploading = true;
+            await savePhotoRecord(record);
+            await renderPhotoModalList();
+            const ok = await uploadPhotoToDrive(record);
+            await refreshPhotoCache();
+            await renderPhotoModalList();
+            renderChecklist();
+            return ok;
+        }
+
+        // 사진 모달의 [드라이브 저장] 버튼: 실패한 사진 다시 올리기
+        async function retryUploadPhoto(photoId) {
+            const all = await getAllPhotosFromDB();
+            const record = all.find(p => p.id === photoId);
+            if (!record) return;
+            if (!getDriveWebhookUrl()) {
+                showToast('드라이브가 연동되지 않았습니다. 설정에서 먼저 연결해 주세요.', 'ph-warning-circle');
+                return;
+            }
+            showToast('드라이브에 다시 저장하는 중...', 'ph-spinner-gap spin');
+            const ok = await uploadPhotoWithStatus(record);
+            showToast(ok ? '구글 드라이브 저장 완료! ✨' : `드라이브 저장 실패: ${record.syncError || '오류'}`, ok ? 'ph-cloud-check' : 'ph-warning-circle');
+        }
+
+        // 기기에만 남아 있는 사진을 자동으로 다시 올림 (앱 시작·온라인 복귀·화면 복귀 시)
+        let isRetryingUploads = false;
+        async function retryPendingUploads() {
+            if (isRetryingUploads || !getDriveWebhookUrl() || navigator.onLine === false) return;
+            isRetryingUploads = true;
+            try {
+                // 업로드 도중 앱이 닫혀 '저장 중'으로 멈춘 사진도 다시 대상에 포함
+                const pending = (await getAllPhotosFromDB()).filter(isPhotoPending);
+                if (!pending.length) return;
+                let okCount = 0;
+                for (const record of pending) {
+                    if (await uploadPhotoWithStatus(record)) okCount++;
+                }
+                const failCount = pending.length - okCount;
+                if (okCount) showToast(`밀려 있던 사진 ${okCount}장을 드라이브에 저장했습니다.${failCount ? ` (${failCount}장 실패)` : ''}`, 'ph-cloud-check');
+                else showToast(`사진 ${failCount}장이 아직 드라이브에 저장되지 않았습니다.`, 'ph-warning-circle');
+            } finally {
+                isRetryingUploads = false;
+            }
+        }
+
+        window.addEventListener('online', () => retryPendingUploads());
+
         // 구글 드라이브 업로드
         async function uploadPhotoToDrive(photoRecord) {
+            photoRecord.isUploading = false; // 아래에서 저장되는 최종 상태는 항상 '업로드 중 아님'
             const webhookUrl = getDriveWebhookUrl();
             if (!webhookUrl) {
                 photoRecord.syncError = '웹 앱 URL 미설정';
@@ -511,19 +567,15 @@
                     // 구글 드라이브 URL이 설정되어 있다면 즉시 비동기 업로드 진행
                     const webhookUrl = getDriveWebhookUrl();
                     if (webhookUrl) {
-                        record.isUploading = true;
-                        renderPhotoModalList();
-                        uploadPhotoToDrive(record).then(success => {
-                            record.isUploading = false;
-                            renderPhotoModalList();
+                        uploadPhotoWithStatus(record).then(success => {
                             if (success) {
                                 showToast(`구글 드라이브 (\\예배부 데이터\\사진) 저장 완료! ✨`, 'ph-cloud-check');
                             } else {
-                                showToast(`드라이브 저장 실패: ${record.syncError || '오류'}`, 'ph-warning-circle');
+                                showToast(`드라이브 저장 실패 – 기기에 보관 중이며, 연결되면 자동으로 다시 올립니다.`, 'ph-warning-circle');
                             }
                         });
                     } else {
-                        showToast(`기기 및 드라이브에 저장되었습니다.`, 'ph-device-mobile');
+                        showToast(`기기에 저장되었습니다 (드라이브 미연동).`, 'ph-device-mobile');
                     }
                 } catch (e) {
                     console.error('Photo save error:', e);
@@ -538,9 +590,18 @@
             showToast(`${total}장의 사진이 첨부되었습니다!`, 'ph-camera');
         }
 
+        function confirmPhotoDelete() {
+            return appConfirm({
+                title: '사진 삭제',
+                desc: '이 사진을 삭제할까요?\n구글 드라이브에서도 함께 삭제됩니다.',
+                okText: '삭제',
+                icon: 'ph-trash'
+            });
+        }
+
         // 사진 삭제 (체크리스트 사진 모달)
         async function confirmDeletePhoto(photoId) {
-            if (!confirm('이 사진을 삭제하시겠습니까?\n(구글 드라이브에서도 함께 삭제됩니다)')) return;
+            if (!(await confirmPhotoDelete())) return;
 
             let target = null;
             if (currentPhotoItemId) {
@@ -580,7 +641,7 @@
             if (!currentViewerPhotos.length) return;
             const target = currentViewerPhotos[currentViewerIndex];
             if (!target) return;
-            if (!confirm('이 사진을 삭제하시겠습니까?\n(구글 드라이브에서도 함께 삭제됩니다)')) return;
+            if (!(await confirmPhotoDelete())) return;
 
             const photoId = target.id;
             const driveFileId = target.driveFileId || target.id;
@@ -730,6 +791,8 @@
         function closeDriveConfigModal() {
             closeSheet('driveConfigModal');
             updateDriveBannerStatus();
+            refreshSettingsStatus();
+            if (!document.getElementById('attendanceModal').classList.contains('hidden')) renderAttendanceModal();
         }
 
         function saveDriveWebhookUrl() {
@@ -745,7 +808,7 @@
         async function testDriveConnection() {
             const val = document.getElementById('driveWebhookInput').value.trim();
             if (!val) {
-                alert('웹 앱 URL을 입력해 주세요.');
+                showToast('웹 앱 URL을 입력해 주세요.', 'ph-warning-circle');
                 return;
             }
             showToast('드라이브 연결 테스트 중...', 'ph-spinner-gap spin');

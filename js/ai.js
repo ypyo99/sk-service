@@ -61,18 +61,9 @@ function getGeminiApiKey() {
     return raw.replace(/["'\r\n\s]/g, '').trim();
 }
 
-// 상단 헤더 버튼의 API 키 등록 상태 배지 갱신
+// API 키 등록 상태 표시 갱신 (설정 화면)
 function updateApiKeyButtons() {
-    const hasKey = !!getGeminiApiKey();
-    const choirBtnText = document.getElementById('choirApiKeyBtnText');
-    const verseBtnText = document.getElementById('verseApiKeyBtnText');
-    const choirBtn = document.getElementById('choirApiKeyBtn');
-    const verseBtn = document.getElementById('verseApiKeyBtn');
-
-    if (choirBtnText) choirBtnText.textContent = hasKey ? 'API 키 (등록됨)' : 'API 키 설정';
-    if (verseBtnText) verseBtnText.textContent = hasKey ? 'API 키 (등록됨)' : 'API 키 설정';
-    if (choirBtn) choirBtn.classList.toggle('active-key', hasKey);
-    if (verseBtn) verseBtn.classList.toggle('active-key', hasKey);
+    refreshSettingsStatus();
 }
 
 // API 키 입력 모달 열기
@@ -109,6 +100,7 @@ function openGeminiApiKeyModal() {
 
 function closeGeminiApiKeyModal() {
     closeSheet('geminiKeyModal');
+    refreshSettingsStatus();
 }
 
 // API 키 비밀번호 마스킹 가시성 토글
@@ -152,8 +144,14 @@ function saveGeminiApiKey() {
 }
 
 // API 키 삭제
-function clearGeminiApiKey() {
-    if (!confirm('등록된 Gemini API 키를 삭제할까요?\n(삭제 후에는 기본 내장 추천 구절로 동작합니다.)')) return;
+async function clearGeminiApiKey() {
+    const ok = await appConfirm({
+        title: 'API 키 삭제',
+        desc: '등록된 Gemini API 키를 삭제할까요?\n삭제 후에는 기본 내장 문구로 동작합니다.',
+        okText: '삭제',
+        icon: 'ph-trash'
+    });
+    if (!ok) return;
     localStorage.removeItem(GEMINI_API_KEY_STORAGE);
     const input = document.getElementById('geminiApiKeyInput');
     if (input) input.value = '';
@@ -512,7 +510,7 @@ let isFetchingVerseAI = false;
 function getTodayVerseIndex() {
     const now = new Date();
     const seed = now.getFullYear() * 10000 + (now.getMonth() + 1) * 100 + now.getDate();
-    return Math.abs(seed) % (window.BIBLE_VERSES ? window.BIBLE_VERSES.length : 100);
+    return Math.abs(seed) % (BIBLE_VERSES.length || 100);
 }
 
 function renderCurrentVerseDisplay(item, isAI = false) {
@@ -547,7 +545,7 @@ function renderCurrentVerseDisplay(item, isAI = false) {
 
 // 예배위원 맞춤 성경구절 AI 추천 (0초 즉각 렌더링 + 초고속 0.8초 AI 생성)
 async function fetchBibleVerseAI(forceRefresh = false) {
-    const versesLib = window.BIBLE_VERSES || [];
+    const versesLib = BIBLE_VERSES; // data.js의 const 전역 (window 속성 아님)
     const apiKey = getGeminiApiKey();
     const shuffleBtn = document.getElementById('modalVerseShuffleBtn');
     const textEl = document.getElementById('modalVerseText');
@@ -680,7 +678,7 @@ function shuffleBibleVerse() {
 
 function copyBibleVerse() {
     buzz(12);
-    const versesLib = window.BIBLE_VERSES || [];
+    const versesLib = BIBLE_VERSES; // data.js의 const 전역 (window 속성 아님)
     const item = currentActiveVerse || (versesLib[currentBibleVerseIndex >= 0 ? currentBibleVerseIndex : getTodayVerseIndex()]);
     if (!item) return;
     const textToCopy = `📖 [성광교회 예배부 기도모임 말씀]\n\n"${item.text.replace(/^"|"$/g, '').trim()}"\n— ${item.ref.replace(/^—+|—+$/g, '').trim()} —\n\n🙏 함께 나누는 기도:\n${item.prayer}`;

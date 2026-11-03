@@ -4,11 +4,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport"
-        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="color-scheme" content="light">
-    <meta name="supported-color-schemes" content="light">
+        content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="color-scheme" content="light dark">
     <meta name="theme-color" content="#1e1b4b">
-    <meta name="theme-color" content="#1a1f3c">
+    <!-- 화면 깜빡임 없이 첫 렌더링 전에 테마 적용 (APP_THEME: auto | light | dark) -->
+    <script>
+        (function () {
+            try {
+                var t = localStorage.getItem('APP_THEME') || 'auto';
+                var dark = t === 'dark' || (t === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                if (dark) document.documentElement.classList.add('dark');
+            } catch (e) { }
+        })();
+    </script>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="예배부">
@@ -56,10 +64,20 @@
                         <span class="icon-btn"><i class="ph-bold ph-cloud-arrow-down"></i></span>
                         <span class="act-label">시트 갱신</span>
                     </button>
-                    <button class="act danger" onclick="openResetModal()" title="현재 예배 초기화">
-                        <span class="icon-btn"><i class="ph-bold ph-arrow-counter-clockwise"></i></span>
-                        <span class="act-label">예배 초기화</span>
-                    </button>
+                    <div class="more-wrap">
+                        <button class="act" id="moreBtn" onclick="toggleMoreMenu(event)" title="더보기"
+                            aria-haspopup="menu" aria-expanded="false">
+                            <span class="icon-btn"><i class="ph-bold ph-dots-three-outline"></i></span>
+                            <span class="act-label">더보기</span>
+                        </button>
+                        <div id="moreMenu" class="more-menu hidden" role="menu">
+                            <button role="menuitem" onclick="closeMoreMenu(); openSettingsModal()"><i
+                                    class="ph-bold ph-gear-six"></i>설정</button>
+                            <button role="menuitem" class="danger" onclick="closeMoreMenu(); openResetModal()"><i
+                                    class="ph-bold ph-arrow-counter-clockwise"></i><span id="moreResetLabel">예배
+                                    초기화</span></button>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -104,10 +122,22 @@
         </div>
     </header>
 
+    <!-- 스크롤 시 상단에 나타나는 축소 진행률 바 -->
+    <div id="miniBar" class="mini-bar" aria-hidden="true">
+        <div class="wrap mini-inner">
+            <button class="mini-srv" onclick="scrollToTop()" tabindex="-1">
+                <span id="miniSrv">1부 예배</span><i class="ph-bold ph-caret-up"></i>
+            </button>
+            <span class="mini-cnt" id="miniCnt"></span>
+            <span class="mini-pct" id="miniPct">0%</span>
+        </div>
+        <div class="mini-progress"><div id="miniProgress" style="width:0%"></div></div>
+    </div>
+
     <!-- Sticky 카테고리 칩 -->
     <div class="chipbar">
         <div class="wrap" style="padding:0">
-            <div class="tiles" id="categoryTabsBar"></div>
+            <div class="tiles no-scrollbar" id="categoryTabsBar"></div>
         </div>
         <div class="thin-progress">
             <div id="progressBar" style="width:0%"></div>
@@ -192,25 +222,15 @@
                     <button class="text-btn" onclick="resetAttendance()">0으로 초기화</button>
                 </div>
                 <pre id="attendanceSummaryPreview"></pre>
-                <div class="btn-row" style="grid-template-columns: 1fr 1fr; margin-top: 12px;">
-                    <button class="big-btn green" onclick="copyAttendanceReport()"><i class="ph-bold ph-copy"></i>내역
+                <div class="btn-row" style="grid-template-columns: 1fr 2fr; margin-top: 12px;">
+                    <button class="big-btn ghost" onclick="copyAttendanceReport()"><i class="ph-bold ph-copy"></i>내역
                         복사</button>
-                    <button class="big-btn ghost" onclick="saveAttendanceFileToDriveOnly()"><i
-                            class="ph-bold ph-cloud-arrow-up"></i>드라이브에 파일 기록</button>
+                    <button class="big-btn green" onclick="markAttendanceTaskDone()"><i
+                            class="ph-bold ph-check-circle"></i><span id="attDoneLabel">출석체크 완료</span></button>
                 </div>
-                <div style="margin-top: 8px;">
-                    <button class="big-btn" style="width: 100%;" onclick="markAttendanceTaskDone()"><i
-                            class="ph-bold ph-check-circle"></i>출석체크 완료 (드라이브 & 기기 저장)</button>
-                </div>
-                <div id="attDriveFileLinkBox" class="hidden" style="margin-top: 8px; text-align: center;">
-                    <a id="attDriveFileLink" href="#" target="_blank" rel="noopener noreferrer"
-                        style="font-size: 13px; font-weight: 800; color: var(--accent); text-decoration: underline;">
-                        <i class="ph-bold ph-arrow-square-out"></i> 구글드라이브 (\예배부 데이터\출석)에서 파일 확인하기
-                    </a>
-                </div>
-                <div style="font-size:12px; color:var(--muted); text-align:center; margin-top:8px; font-weight:600;"><i
-                        class="ph-bold ph-file-text"></i> 출석체크 완료 시 <b>\예배부 데이터\출석</b> 폴더에 <b>[날짜-x부예배.txt]</b> 파일이 자동
-                    기록됩니다.</div>
+                <div style="font-size:12.5px; color:var(--muted); text-align:center; margin-top:8px; font-weight:600;"><i
+                        class="ph-bold ph-file-text"></i> 완료하면 <b>\예배부 데이터\출석</b> 폴더에 <b>[날짜-x부예배.txt]</b> 파일로
+                    기록됩니다. 드라이브 기록에 실패하면 기기에 저장합니다.</div>
             </div>
         </div>
     </div>
@@ -249,12 +269,7 @@
         <div class="dialog choir-dialog">
             <div class="choir-dialog-top">
                 <div class="choir-badge" id="choirModalBadge"><i class="ph-bold ph-music-notes"></i> 성가대 격려 덕담</div>
-                <div style="display:flex; align-items:center; gap:6px;">
-                    <button type="button" class="pill-btn-sm" id="choirApiKeyBtn" onclick="openGeminiApiKeyModal()" title="Gemini API 키 설정">
-                        <i class="ph-bold ph-key"></i><span id="choirApiKeyBtnText">API 키</span>
-                    </button>
-                    <button class="close-btn" onclick="closeChoirQuoteModal()" aria-label="닫기"><i class="ph-bold ph-x"></i></button>
-                </div>
+                <button class="close-btn" onclick="closeChoirQuoteModal()" aria-label="닫기"><i class="ph-bold ph-x"></i></button>
             </div>
 
             <div class="choir-meeting-info">
@@ -312,12 +327,7 @@
         <div class="dialog verse-dialog">
             <div class="verse-dialog-top">
                 <div class="verse-badge" id="modalVerseBadge"><i class="ph-bold ph-sparkle"></i> 예배위원 기도모임 말씀</div>
-                <div style="display:flex; align-items:center; gap:6px;">
-                    <button type="button" class="pill-btn-sm" id="verseApiKeyBtn" onclick="openGeminiApiKeyModal()" title="Gemini API 키 설정">
-                        <i class="ph-bold ph-key"></i><span id="verseApiKeyBtnText">API 키</span>
-                    </button>
-                    <button class="close-btn" onclick="closeBibleVerseModal()" aria-label="닫기"><i class="ph-bold ph-x"></i></button>
-                </div>
+                <button class="close-btn" onclick="closeBibleVerseModal()" aria-label="닫기"><i class="ph-bold ph-x"></i></button>
             </div>
 
             <div class="verse-meeting-info">
@@ -371,13 +381,9 @@
                         <div class="first-sunday-quote-header">
                             <span class="first-sunday-theme" id="quoteThemeText"><i class="ph-bold ph-sparkle"></i> AI
                                 추천 덕담</span>
-                            <div style="display:flex; gap:6px;">
-                                <button type="button" class="quote-shuffle-btn" onclick="generateChoirQuotesAI(true)"
-                                    id="quoteRegenBtn" title="새로운 AI 덕담 생성"><i class="ph-bold ph-sparkle"></i>새로
-                                    생성</button>
-                                <button type="button" class="quote-shuffle-btn" onclick="openGeminiApiKeyModal()"
-                                    title="Gemini API 키 설정"><i class="ph-bold ph-gear"></i>설정</button>
-                            </div>
+                            <button type="button" class="quote-shuffle-btn" onclick="generateChoirQuotesAI(true)"
+                                id="quoteRegenBtn" title="새로운 AI 덕담 생성"><i class="ph-bold ph-sparkle"></i>새로
+                                생성</button>
                         </div>
 
                         <!-- 로딩 상태 -->
@@ -417,6 +423,66 @@
         </div>
     </div>
 
+    <!-- 통합 설정 (AI 키 / 드라이브 / 앱 설치) -->
+    <div id="settingsModal" class="backdrop hidden" onclick="if (event.target === this) closeSettingsModal()">
+        <div class="sheet">
+            <div class="grabber"></div>
+            <div class="sheet-head">
+                <div>
+                    <div class="eyebrow">관리자 설정</div>
+                    <h3>설정</h3>
+                    <p>AI 문구 생성과 구글 드라이브 저장 연동을 관리합니다.</p>
+                </div>
+                <button class="close-btn" onclick="closeSettingsModal()" aria-label="닫기"><i
+                        class="ph-bold ph-x"></i></button>
+            </div>
+            <div class="settings-list">
+                <div class="settings-card">
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <span class="sr-icon" style="--c:#64748b"><i class="ph-bold ph-moon-stars"></i></span>
+                        <span class="sr-body">
+                            <span class="sr-title">화면 테마</span>
+                            <span class="sr-sub">자동은 휴대폰의 다크 모드 설정을 따릅니다</span>
+                        </span>
+                    </div>
+                    <div class="theme-seg" role="radiogroup" aria-label="화면 테마">
+                        <button role="radio" id="theme-auto" onclick="setTheme('auto')"><i
+                                class="ph-bold ph-circle-half"></i>자동</button>
+                        <button role="radio" id="theme-light" onclick="setTheme('light')"><i
+                                class="ph-bold ph-sun"></i>라이트</button>
+                        <button role="radio" id="theme-dark" onclick="setTheme('dark')"><i
+                                class="ph-bold ph-moon"></i>다크</button>
+                    </div>
+                </div>
+                <button class="settings-row" onclick="openGeminiApiKeyModal()">
+                    <span class="sr-icon" style="--c:#4f46e5"><i class="ph-bold ph-sparkle"></i></span>
+                    <span class="sr-body">
+                        <span class="sr-title">Gemini AI 키</span>
+                        <span class="sr-sub" id="settingsAiStatus"></span>
+                    </span>
+                    <i class="ph-bold ph-caret-right sr-chev"></i>
+                </button>
+                <button class="settings-row" onclick="openDriveConfigModal()">
+                    <span class="sr-icon" style="--c:#059669"><i class="ph-bold ph-google-drive-logo"></i></span>
+                    <span class="sr-body">
+                        <span class="sr-title">구글 드라이브 연동</span>
+                        <span class="sr-sub" id="settingsDriveStatus"></span>
+                    </span>
+                    <i class="ph-bold ph-caret-right sr-chev"></i>
+                </button>
+                <button class="settings-row" id="settingsInstallRow" onclick="closeSettingsModal(); triggerPwaInstall()">
+                    <span class="sr-icon" style="--c:#d97706"><i class="ph-bold ph-device-mobile"></i></span>
+                    <span class="sr-body">
+                        <span class="sr-title">홈 화면에 앱 설치</span>
+                        <span class="sr-sub">주소창 없이 전체화면으로 실행</span>
+                    </span>
+                    <i class="ph-bold ph-caret-right sr-chev"></i>
+                </button>
+            </div>
+            <button class="big-btn dark" style="width:100%; margin-top:16px;" onclick="closeSettingsModal()">닫기</button>
+        </div>
+    </div>
+
     <!-- Gemini API Key 설정 모달 -->
     <div id="geminiKeyModal" class="backdrop center hidden"
         onclick="if (event.target === this) closeGeminiApiKeyModal()">
@@ -446,19 +512,6 @@
                 <button type="submit" class="big-btn primary"><i class="ph-bold ph-check"></i>저장하기</button>
             </div>
         </form>
-    </div>
-
-    <!-- 초기화 확인 -->
-    <div id="resetModal" class="backdrop center hidden" onclick="if (event.target === this) closeResetModal()">
-        <div class="dialog">
-            <div class="big-icon"><i class="ph-bold ph-arrow-counter-clockwise"></i></div>
-            <h3 id="resetModalTitle">예배 초기화</h3>
-            <p id="resetModalDesc">현재 선택된 예배의 체크 항목을 모두 해제할까요?</p>
-            <div class="btn-row" style="margin-top:20px">
-                <button class="big-btn ghost" onclick="closeResetModal()">취소</button>
-                <button class="big-btn red" onclick="confirmResetService()">초기화</button>
-            </div>
-        </div>
     </div>
 
     <!-- 사진 관리 모달 -->
@@ -743,10 +796,32 @@ function deleteDrivePhoto(fileId, fileName) {
         </div>
     </div>
 
+    <!-- 공통 확인/안내 대화상자 (브라우저 기본 alert/confirm 대체, 모든 화면 위에 표시) -->
+    <div id="confirmModal" class="backdrop center confirm-layer hidden"
+        onclick="if (event.target === this) resolveConfirm(false)">
+        <div class="dialog" role="alertdialog" aria-modal="true" aria-labelledby="confirmTitle">
+            <div class="big-icon" id="confirmIcon"><i class="ph-bold ph-question"></i></div>
+            <h3 id="confirmTitle"></h3>
+            <p id="confirmDesc"></p>
+            <div class="btn-row" id="confirmBtnRow" style="margin-top:20px">
+                <button class="big-btn ghost" id="confirmCancelBtn" onclick="resolveConfirm(false)">취소</button>
+                <button class="big-btn red" id="confirmOkBtn" onclick="resolveConfirm(true)">확인</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 새 버전 안내 -->
+    <div id="updateBanner" class="update-banner hidden" role="status">
+        <i class="ph-bold ph-arrow-circle-up" style="font-size:20px;"></i>
+        <span>새 버전이 있어요</span>
+        <button onclick="applyAppUpdate()">새로고침</button>
+    </div>
+
     <!-- Toast -->
     <div id="toast" class="toast hidden" role="status">
         <i class="ph-fill ph-check-circle"></i>
         <span id="toastMsg">완료되었습니다!</span>
+        <button id="toastUndo" class="toast-undo hidden" onclick="runToastUndo()">되돌리기</button>
     </div>
 
     <script defer src="js/data.js"></script>

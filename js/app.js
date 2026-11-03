@@ -278,11 +278,13 @@ function esc(s) {
             saveState();
             renderAll();
             const done = isServiceComplete();
-            if (done && !wasComplete) {
+            const justCompleted = done && !wasComplete;
+            if (justCompleted) {
                 buzz([30, 60, 30]);
                 showToast(`${SERVICE_NAMES[appState.currentService]} 모든 항목 완료! 수고하셨습니다 🙏`, 'ph-confetti');
             }
             wasComplete = done;
+            return justCompleted;
         }
 
         function toggleItemCheck(itemId) {
@@ -296,20 +298,32 @@ function esc(s) {
             lastToggledId = null;
         }
 
+        // 키보드: 항목에 포커스가 있을 때 Space/Enter로 체크 (다시 그린 뒤에도 포커스 유지)
+        function itemKeydown(e, itemId) {
+            if (e.target !== e.currentTarget) return; // 안쪽 버튼(사진 등)의 키 입력은 그대로 둠
+            if (e.key !== ' ' && e.key !== 'Enter') return;
+            e.preventDefault();
+            toggleItemCheck(itemId);
+            const el = document.getElementById(`item-${itemId}`);
+            if (el) el.focus();
+        }
+
         function toggleCategoryGroupAll(code) {
             const srv = appState.currentService;
             if (!appState.checkedByService[srv]) appState.checkedByService[srv] = {};
             const groupItems = SPREADSHEET_ITEMS.filter(i => i.code === code);
             const allChecked = groupItems.every(i => !!appState.checkedByService[srv][i.id]);
+            const snap = snapshotRecords();
             groupItems.forEach(i => {
                 appState.checkedByService[srv][i.id] = !allChecked;
             });
             const catObj = CATEGORIES.find(c => c.code === code);
             buzz(15);
-            afterCheckChange();
-            if (!isServiceComplete()) {
-                showToast(!allChecked ? `${catObj.label} 전체 완료` : `${catObj.label} 전체 해제`, !allChecked ? 'ph-check-circle' : 'ph-arrow-counter-clockwise');
-            }
+            const justCompleted = afterCheckChange();
+            const msg = justCompleted
+                ? `${SERVICE_NAMES[srv]} 모든 항목 완료! 수고하셨습니다 🙏`
+                : (!allChecked ? `${catObj.label} 전체 완료` : `${catObj.label} 전체 해제`);
+            showUndoToast(msg, justCompleted ? 'ph-confetti' : (!allChecked ? 'ph-check-circle' : 'ph-arrow-counter-clockwise'), snap);
         }
 
         function toggleGroupCollapse(code) {
@@ -318,6 +332,7 @@ function esc(s) {
             renderChecklist();
         }
 
+        let lastCenteredCategory = null;
         function renderHeaderAndTabs() {
             // 1. 예배 선택
             ['service1', 'service2', 'afternoon', 'dawn'].forEach(s => {
@@ -344,6 +359,13 @@ function esc(s) {
             document.getElementById('progressRing').style.strokeDashoffset = C * (1 - pct / 100);
             document.getElementById('progressRingWrap').classList.toggle('complete', totalCount > 0 && remaining === 0);
 
+            // 2-1. 스크롤 시 보이는 축소 진행률 바
+            document.getElementById('miniSrv').textContent = SERVICE_NAMES[appState.currentService];
+            document.getElementById('miniCnt').textContent = totalCount ? (remaining === 0 ? '모두 완료' : `${remaining}개 남음`) : '';
+            document.getElementById('miniPct').textContent = `${pct}%`;
+            document.getElementById('miniProgress').style.width = `${pct}%`;
+            document.getElementById('moreResetLabel').textContent = `${SERVICE_NAMES[appState.currentService]} 초기화`;
+
             // 3. 남은 것만 스위치
             document.getElementById('filterBtn').classList.toggle('on', appState.filterUnchecked);
 
@@ -367,7 +389,16 @@ function esc(s) {
                 const done = catItems.filter(i => checkedMap[i.id]).length;
                 tabsHtml += tileHtml(cat.code, esc(cat.code), cat.name, cat.color, done, catItems.length);
             });
-            document.getElementById('categoryTabsBar').innerHTML = tabsHtml;
+            const tilesBar = document.getElementById('categoryTabsBar');
+            tilesBar.innerHTML = tabsHtml;
+            // 카테고리를 바꾼 경우에만 선택된 타일을 가로 스크롤 가운데로 이동
+            if (lastCenteredCategory !== appState.selectedCategory) {
+                lastCenteredCategory = appState.selectedCategory;
+                const activeTile = tilesBar.querySelector('.tile.active');
+                if (activeTile && tilesBar.scrollWidth > tilesBar.clientWidth) {
+                    tilesBar.scrollTo({ left: activeTile.offsetLeft - (tilesBar.clientWidth - activeTile.offsetWidth) / 2, behavior: 'smooth' });
+                }
+            }
 
             // 4-1. '전체' 선택 시 상단 고정 해제하여 스크롤 시 위로 사라지게 함
             const chipbarEl = document.querySelector('.chipbar');
@@ -471,20 +502,23 @@ function esc(s) {
 
             const pInfo = photoCache[item.id];
             const pCount = pInfo ? pInfo.count : 0;
+            const pPending = pInfo ? pInfo.pending : 0;
+            const photoTitle = pPending ? `사진 ${pCount}장 (${pPending}장 드라이브 저장 대기)` : `사진 ${pCount}장 보기/추가`;
             const photoBtnHtml = pCount > 0
-                ? `<button class="photo-btn has-photo" onclick="event.stopPropagation(); openPhotoModal('${item.id}')" title="사진 ${pCount}장 보기/추가">
+                ? `<button class="photo-btn has-photo" onclick="event.stopPropagation(); openPhotoModal('${item.id}')" title="${photoTitle}" aria-label="${photoTitle}">
                      <div class="photo-thumb-wrap">
                          <img src="${pInfo.latestThumb}" class="photo-thumb" alt="사진" referrerpolicy="no-referrer" />
-                         <span class="photo-badge">${pCount}</span>
+                         <span class="photo-badge ${pPending ? 'pending' : ''}">${pPending ? '!' : pCount}</span>
                      </div>
                    </button>`
-                : `<button class="photo-btn" onclick="event.stopPropagation(); openPhotoModal('${item.id}')" title="사진 촬영/첨부">
+                : `<button class="photo-btn" onclick="event.stopPropagation(); openPhotoModal('${item.id}')" title="사진 촬영/첨부" aria-label="사진 촬영/첨부">
                      <i class="ph-bold ph-camera"></i>
                    </button>`;
 
             return `
                 <div class="item ${isChecked ? 'done' : ''} ${item.urgent ? 'urgent' : ''} ${lastToggledId === item.id ? 'pop' : ''}"
-                     role="checkbox" aria-checked="${isChecked}" onclick="toggleItemCheck('${item.id}')">
+                     id="item-${item.id}" role="checkbox" tabindex="0" aria-checked="${isChecked}"
+                     onclick="toggleItemCheck('${item.id}')" onkeydown="itemKeydown(event, '${item.id}')">
                     <div class="check"><i class="ph-bold ph-check"></i></div>
                     <div class="item-body">
                         <div class="item-text">${esc(item.text)}</div>
@@ -505,6 +539,58 @@ function esc(s) {
         function closeSheet(id) {
             document.getElementById(id).classList.add('hidden');
             if (!document.querySelector('.backdrop:not(.hidden)')) document.body.style.overflow = '';
+        }
+
+        // === 공통 확인/안내 대화상자 (Promise<boolean>) ===
+        let confirmResolver = null;
+        function appConfirm({ title, desc = '', okText = '확인', cancelText = '취소', icon = 'ph-question', tone = 'danger' }) {
+            if (confirmResolver) confirmResolver(false);
+            document.getElementById('confirmTitle').textContent = title;
+            document.getElementById('confirmDesc').textContent = desc;
+            const iconBox = document.getElementById('confirmIcon');
+            iconBox.className = `big-icon ${tone}`;
+            iconBox.innerHTML = `<i class="ph-bold ${icon}"></i>`;
+            const okBtn = document.getElementById('confirmOkBtn');
+            okBtn.textContent = okText;
+            okBtn.className = `big-btn ${tone === 'danger' ? 'red' : 'primary'}`;
+            const cancelBtn = document.getElementById('confirmCancelBtn');
+            cancelBtn.classList.toggle('hidden', !cancelText);
+            if (cancelText) cancelBtn.textContent = cancelText;
+            document.getElementById('confirmBtnRow').style.gridTemplateColumns = cancelText ? '' : '1fr';
+            openSheet('confirmModal');
+            setTimeout(() => okBtn.focus(), 50);
+            return new Promise(resolve => { confirmResolver = resolve; });
+        }
+
+        function appAlert({ title, desc = '', okText = '확인', icon = 'ph-info' }) {
+            return appConfirm({ title, desc, okText, cancelText: null, icon, tone: 'primary' });
+        }
+
+        function resolveConfirm(ok) {
+            closeSheet('confirmModal');
+            const resolve = confirmResolver;
+            confirmResolver = null;
+            if (resolve) resolve(ok);
+        }
+
+        // === 되돌리기 (체크·출석 스냅샷) ===
+        function snapshotRecords() {
+            return JSON.stringify({ checkedByService: appState.checkedByService, attendance: appState.attendance });
+        }
+
+        function restoreRecords(snap) {
+            const s = JSON.parse(snap);
+            appState.checkedByService = s.checkedByService;
+            appState.attendance = s.attendance;
+            wasComplete = isServiceComplete();
+            saveState();
+            renderAll();
+            if (!document.getElementById('attendanceModal').classList.contains('hidden')) renderAttendanceModal();
+            showToast('되돌렸습니다.', 'ph-arrow-u-up-left');
+        }
+
+        function showUndoToast(msg, icon, snap) {
+            showToast(msg, icon, { undo: () => restoreRecords(snap) });
         }
 
         // === 출석 계수기 ===
@@ -574,6 +660,7 @@ function esc(s) {
             const curTab = tabs.find(t => t.key === appState.currentAttTab);
             document.getElementById('attTotalLabel').textContent = `${curTab.label} 합계`;
             document.getElementById('attTotalNum').textContent = getServiceSubtotal(appState.currentAttTab);
+            document.getElementById('attDoneLabel').textContent = `${curTab.label} 출석체크 완료`;
 
             const currentData = appState.attendance[appState.currentAttTab];
             const fields = [
@@ -617,8 +704,15 @@ function esc(s) {
                 `▶ 총계: ${grand}명 (방송실, 성가대 포함, 인터넷 예배 포함)`;
         }
 
-        function resetAttendance() {
-            if (!confirm('1부·2부·오후·특새 출석 인원을 모두 0으로 초기화할까요?')) return;
+        async function resetAttendance() {
+            const ok = await appConfirm({
+                title: '출석 인원 초기화',
+                desc: '1부·2부·오후·특새 출석 인원을 모두 0으로 초기화할까요?',
+                okText: '초기화',
+                icon: 'ph-arrow-counter-clockwise'
+            });
+            if (!ok) return;
+            const snap = snapshotRecords();
             appState.attendance = {
                 att1: { male: 0, female: 0, broadcast: 0 },
                 att2: { male: 0, female: 0, broadcast: 0 },
@@ -627,7 +721,7 @@ function esc(s) {
             };
             saveState();
             renderAttendanceModal();
-            showToast('출석 인원이 모두 0으로 초기화되었습니다.', 'ph-arrow-counter-clockwise');
+            showUndoToast('출석 인원이 모두 0으로 초기화되었습니다.', 'ph-arrow-counter-clockwise', snap);
         }
 
         function legacyCopy(text) {
@@ -749,35 +843,7 @@ function esc(s) {
             }
         }
 
-        // 드라이브에만 즉시 파일 기록하는 버튼 핸들러
-        async function saveAttendanceFileToDriveOnly() {
-            const { fileName, fileContent } = generateAttendanceReportContent();
-            const webhookUrl = getDriveWebhookUrl();
-
-            if (!webhookUrl) {
-                alert('구글 드라이브 웹 앱 URL이 설정되지 않았습니다.\n설정 창에서 URL을 먼저 등록해 주세요.');
-                openDriveConfigModal();
-                return;
-            }
-
-            showToast(`${fileName} 드라이브(\예배부 데이터\출석)에 기록 중...`, 'ph-spinner-gap spin');
-            const res = await uploadAttendanceReportToDrive(fileName, fileContent);
-            if (res && res.success) {
-                showToast(`${fileName} 드라이브(\예배부 데이터\출석) 기록 완료!`, 'ph-cloud-check');
-                if (res.viewUrl) {
-                    const box = document.getElementById('attDriveFileLinkBox');
-                    const link = document.getElementById('attDriveFileLink');
-                    if (box && link) {
-                        link.href = res.viewUrl;
-                        box.classList.remove('hidden');
-                    }
-                }
-            } else {
-                showToast('드라이브 기록 실패: ' + (res.error || '연결 확인 필요'), 'ph-warning-circle');
-            }
-        }
-
-        // 출석체크 완료 및 [날짜-x부예배] 파일 생성 & 드라이브/기기 저장
+        // 출석체크 완료: [날짜-x부예배] 파일을 드라이브에 기록 (미연동·실패 시에만 기기에 저장)
         async function markAttendanceTaskDone() {
             // 파일은 계수기에서 선택한 탭 기준으로 만들어지므로, 체크도 같은 예배에 표시
             const attToSrv = { att1: 'service1', att2: 'service2', att3: 'afternoon', attDawn: 'dawn' };
@@ -788,33 +854,28 @@ function esc(s) {
 
             const { fileName, fileContent } = generateAttendanceReportContent();
 
-            // 1. 기기 로컬 파일 다운로드
-            downloadAttendanceTextFile(fileName, fileContent);
-
-            // 2. 구글 드라이브 (\예배부 데이터) 파일 기록
-            const webhookUrl = getDriveWebhookUrl();
-            if (webhookUrl) {
-                showToast(`${fileName} 드라이브(\예배부 데이터)에 기록 중...`, 'ph-spinner-gap spin');
-                uploadAttendanceReportToDrive(fileName, fileContent).then(res => {
-                    if (res && res.success) {
-                        showToast(`${fileName} 드라이브(\예배부 데이터\출석)에 안전하게 기록되었습니다!`, 'ph-cloud-check');
-                    } else {
-                        showToast('드라이브 기록 실패 (기기 다운로드 완료)', 'ph-warning-circle');
-                    }
-                });
-            } else {
-                showToast(`${fileName} 기기에 저장되었습니다 (드라이브 미연동)`, 'ph-file-text');
-            }
-
             closeSheet('attendanceModal');
             if (srv !== appState.currentService) {
                 saveState();
                 renderAll();
-                showToast(`${SERVICE_NAMES[srv]}의 출석체크 항목을 완료로 표시했습니다.`, 'ph-check-circle');
             } else {
                 afterCheckChange();
             }
             buzz([20, 50, 20]);
+
+            if (!getDriveWebhookUrl()) {
+                downloadAttendanceTextFile(fileName, fileContent);
+                showToast(`${fileName} 기기에 저장되었습니다 (드라이브 미연동)`, 'ph-file-text');
+                return;
+            }
+            showToast(`${fileName} 드라이브에 기록 중...`, 'ph-spinner-gap spin');
+            const res = await uploadAttendanceReportToDrive(fileName, fileContent);
+            if (res && res.success) {
+                showToast(`${SERVICE_NAMES[srv]} 출석 완료 · 드라이브(\\예배부 데이터\\출석)에 기록했습니다.`, 'ph-cloud-check');
+            } else {
+                downloadAttendanceTextFile(fileName, fileContent);
+                showToast('드라이브 기록 실패 – 기기에 파일로 저장했습니다.', 'ph-warning-circle');
+            }
         }
         // ==========================================
 
@@ -885,18 +946,21 @@ function isFirstSunday(d = new Date()) {
         function openOfferingManualModal() { openSheet('offeringModal'); }
         function closeOfferingManualModal() { closeSheet('offeringModal'); }
 
-        function openResetModal() {
+        async function openResetModal() {
             const name = SERVICE_NAMES[appState.currentService];
-            document.getElementById('resetModalTitle').textContent = `${name} 초기화`;
-            document.getElementById('resetModalDesc').textContent = `${name}의 체크 표시와 출석 인원을 모두 초기화할까요?`;
-            openSheet('resetModal');
+            const ok = await appConfirm({
+                title: `${name} 초기화`,
+                desc: `${name}의 체크 표시와 출석 인원을 모두 초기화할까요?`,
+                okText: '초기화',
+                icon: 'ph-arrow-counter-clockwise'
+            });
+            if (ok) confirmResetService();
         }
-
-        function closeResetModal() { closeSheet('resetModal'); }
 
         function confirmResetService() {
             const curSrv = appState.currentService;
             const name = SERVICE_NAMES[curSrv];
+            const snap = snapshotRecords();
 
             // 1. 체크 표시 초기화
             appState.checkedByService[curSrv] = {};
@@ -915,12 +979,143 @@ function isFirstSunday(d = new Date()) {
             }
 
             saveState();
-            closeResetModal();
             renderAll();
-            if (typeof renderAttendanceModal === 'function') {
-                renderAttendanceModal();
+            renderAttendanceModal();
+            showUndoToast(`${name} 체크 및 출석 인원이 초기화되었습니다.`, 'ph-arrow-counter-clockwise', snap);
+        }
+
+        // === 더보기 메뉴 ===
+        function toggleMoreMenu(e) {
+            if (e) e.stopPropagation();
+            const menu = document.getElementById('moreMenu');
+            const open = menu.classList.contains('hidden');
+            menu.classList.toggle('hidden', !open);
+            document.getElementById('moreBtn').setAttribute('aria-expanded', String(open));
+        }
+
+        function closeMoreMenu() {
+            document.getElementById('moreMenu').classList.add('hidden');
+            document.getElementById('moreBtn').setAttribute('aria-expanded', 'false');
+        }
+
+        document.addEventListener('click', e => {
+            if (!e.target.closest('.more-wrap')) closeMoreMenu();
+        });
+
+        // === 통합 설정 ===
+        function refreshSettingsStatus() {
+            const ai = document.getElementById('settingsAiStatus');
+            const drive = document.getElementById('settingsDriveStatus');
+            if (ai) {
+                const hasKey = !!getGeminiApiKey();
+                ai.textContent = hasKey ? '등록됨 · 실시간 AI 생성 사용 중' : '미등록 · 기본 내장 문구로 동작';
+                ai.classList.toggle('on', hasKey);
             }
-            showToast(`${name} 체크 및 출석 인원이 초기화되었습니다.`, 'ph-arrow-counter-clockwise');
+            if (drive) {
+                const url = getDriveWebhookUrl();
+                let custom = false;
+                try { custom = !!localStorage.getItem(DRIVE_WEBHOOK_KEY); } catch (e) { }
+                drive.textContent = !url ? '미연동 · 기기에만 저장' : (custom ? '연동됨 · 직접 설정한 주소' : '연동됨 · 기본 주소');
+                drive.classList.toggle('on', !!url);
+            }
+            const installRow = document.getElementById('settingsInstallRow');
+            if (installRow) installRow.classList.toggle('hidden', isRunningStandalone());
+        }
+
+        function openSettingsModal() {
+            refreshSettingsStatus();
+            applyTheme();
+            openSheet('settingsModal');
+        }
+
+        // === 화면 테마 (auto | light | dark) — 첫 적용은 index.html <head>의 인라인 스크립트 ===
+        const THEME_KEY = 'APP_THEME';
+        const darkQuery = window.matchMedia('(prefers-color-scheme: dark)');
+
+        function getThemePref() {
+            try { return localStorage.getItem(THEME_KEY) || 'auto'; } catch (e) { return 'auto'; }
+        }
+
+        function applyTheme() {
+            const pref = getThemePref();
+            const dark = pref === 'dark' || (pref === 'auto' && darkQuery.matches);
+            document.documentElement.classList.toggle('dark', dark);
+            ['auto', 'light', 'dark'].forEach(k => {
+                const btn = document.getElementById(`theme-${k}`);
+                if (!btn) return;
+                btn.classList.toggle('active', k === pref);
+                btn.setAttribute('aria-checked', String(k === pref));
+            });
+        }
+
+        function setTheme(pref) {
+            try { localStorage.setItem(THEME_KEY, pref); } catch (e) { }
+            applyTheme();
+        }
+
+        darkQuery.addEventListener('change', applyTheme);
+
+        function closeSettingsModal() { closeSheet('settingsModal'); }
+
+        // === 새 예배일 시작 확인 (지난 기록 자동 정리) ===
+        function dateKey(d = new Date()) {
+            return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        }
+
+        function hasAnyRecords() {
+            const anyCheck = Object.values(appState.checkedByService).some(m => Object.values(m || {}).some(Boolean));
+            return anyCheck || ['att1', 'att2', 'att3', 'attDawn'].some(k => getServiceSubtotal(k) > 0);
+        }
+
+        let newDayPromptOpen = false;
+        async function checkNewDay() {
+            const today = dateKey();
+            const last = appState.lastActiveDate;
+            if (newDayPromptOpen || last === today) return;
+            if (!last || !hasAnyRecords()) {
+                appState.lastActiveDate = today;
+                saveState();
+                return;
+            }
+            newDayPromptOpen = true;
+            const [, m, d] = last.split('-').map(Number);
+            const ok = await appConfirm({
+                title: '새 예배일이에요',
+                desc: `지난 기록(${m}월 ${d}일)이 남아 있습니다.\n모든 예배의 체크와 출석 인원을 지우고 새로 시작할까요?`,
+                okText: '새로 시작',
+                cancelText: '이어서 하기',
+                icon: 'ph-calendar-check',
+                tone: 'primary'
+            });
+            newDayPromptOpen = false;
+            appState.lastActiveDate = today;
+            if (ok) {
+                const snap = snapshotRecords();
+                Object.keys(appState.checkedByService).forEach(k => { appState.checkedByService[k] = {}; });
+                Object.keys(appState.attendance).forEach(k => { appState.attendance[k] = { male: 0, female: 0, broadcast: 0 }; });
+                wasComplete = false;
+                saveState();
+                renderAll();
+                showUndoToast('지난 기록을 지우고 새로 시작합니다.', 'ph-sparkle', snap);
+            } else {
+                saveState();
+            }
+        }
+
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState !== 'visible' || !SPREADSHEET_ITEMS.length) return;
+            checkNewDay();
+            retryPendingUploads();
+        });
+
+        // === 스크롤 시 축소 진행률 바 ===
+        function initMiniBar() {
+            const target = document.querySelector('.progress-card');
+            if (!target || !('IntersectionObserver' in window)) return;
+            new IntersectionObserver(([entry]) => {
+                const show = !entry.isIntersecting && entry.boundingClientRect.top < 0;
+                document.body.classList.toggle('mini-on', show);
+            }).observe(target);
         }
 
         // 체크 기록은 그대로 두고 구글 시트의 최신 목록만 다시 불러옴
@@ -940,15 +1135,26 @@ function isFirstSunday(d = new Date()) {
         }
 
         let toastTimer = null;
-        function showToast(msg, icon) {
+        let toastUndoFn = null;
+        // opts.undo: 함수를 넘기면 [되돌리기] 버튼을 붙이고 더 오래 표시
+        function showToast(msg, icon, opts) {
             const toast = document.getElementById('toast');
             toast.querySelector('i').className = `ph-fill ${icon || 'ph-check-circle'}`;
             document.getElementById('toastMsg').textContent = msg;
+            toastUndoFn = (opts && opts.undo) || null;
+            document.getElementById('toastUndo').classList.toggle('hidden', !toastUndoFn);
             toast.classList.add('hidden');
             void toast.offsetWidth; // 애니메이션 재시작
             toast.classList.remove('hidden');
             clearTimeout(toastTimer);
-            toastTimer = setTimeout(() => toast.classList.add('hidden'), 2400);
+            toastTimer = setTimeout(() => { toast.classList.add('hidden'); toastUndoFn = null; }, toastUndoFn ? 5000 : 2400);
+        }
+
+        function runToastUndo() {
+            const fn = toastUndoFn;
+            toastUndoFn = null;
+            document.getElementById('toast').classList.add('hidden');
+            if (fn) fn();
         }
 
         function renderAll() {
@@ -963,16 +1169,18 @@ function isFirstSunday(d = new Date()) {
                 if (e.key === 'ArrowRight') { viewerNextPhoto(); return; }
             }
             if (e.key !== 'Escape') return;
-            if (!document.getElementById('choirQuoteModal').classList.contains('hidden')) closeChoirQuoteModal();
+            if (!document.getElementById('confirmModal').classList.contains('hidden')) resolveConfirm(false);
+            else if (!document.getElementById('moreMenu').classList.contains('hidden')) closeMoreMenu();
+            else if (!document.getElementById('choirQuoteModal').classList.contains('hidden')) closeChoirQuoteModal();
             else if (!document.getElementById('bibleVerseModal').classList.contains('hidden')) closeBibleVerseModal();
             else if (!document.getElementById('photoViewerModal').classList.contains('hidden')) closePhotoViewer();
             else if (!document.getElementById('geminiKeyModal').classList.contains('hidden')) closeGeminiApiKeyModal();
             else if (!document.getElementById('firstSundayModal').classList.contains('hidden')) closeFirstSundayModal();
             else if (!document.getElementById('photoModal').classList.contains('hidden')) closePhotoModal();
             else if (!document.getElementById('driveConfigModal').classList.contains('hidden')) closeDriveConfigModal();
+            else if (!document.getElementById('settingsModal').classList.contains('hidden')) closeSettingsModal();
             else if (!document.getElementById('attendanceModal').classList.contains('hidden')) closeAttendanceModal();
             else if (!document.getElementById('offeringModal').classList.contains('hidden')) closeOfferingManualModal();
-            else if (!document.getElementById('resetModal').classList.contains('hidden')) closeResetModal();
         });
 
 
@@ -998,11 +1206,13 @@ function isFirstSunday(d = new Date()) {
         async function triggerPwaInstall() {
             if (!deferredPrompt) {
                 const isIos = /iphone|ipad|ipod/.test(window.navigator.userAgent.toLowerCase());
-                if (isIos) {
-                    alert('아이폰/아이패드 사파리에서는 하단의 [공유] 아이콘을 누른 후 [홈 화면에 추가]를 누르시면 주소창 없이 앱으로 설치됩니다.');
-                } else {
-                    alert('브라우저 주소창 우측의 [설치] 아이콘 또는 메뉴(점 3개)의 [홈 화면에 추가]를 누르시면 주소창 없이 단독 앱으로 설치됩니다.');
-                }
+                appAlert({
+                    title: '홈 화면에 앱 설치',
+                    desc: isIos
+                        ? '사파리 하단의 [공유] 아이콘을 누른 후 [홈 화면에 추가]를 누르면 주소창 없이 앱으로 실행됩니다.'
+                        : '브라우저 주소창 우측의 [설치] 아이콘 또는 메뉴(점 3개)의 [홈 화면에 추가]를 누르면 주소창 없이 앱으로 실행됩니다.',
+                    icon: 'ph-device-mobile'
+                });
                 return;
             }
             deferredPrompt.prompt();
@@ -1021,14 +1231,44 @@ function isFirstSunday(d = new Date()) {
             if (installBtn) installBtn.style.display = 'none';
         });
 
-        // Service Worker 등록
+        // Service Worker 등록 + 새 버전 감지 시 "새 버전이 있어요 — 새로고침" 안내
+        let swRegistration = null;
+        let reloadingForUpdate = false;
+
+        function showUpdateBanner() {
+            document.getElementById('updateBanner').classList.remove('hidden');
+        }
+
+        function applyAppUpdate() {
+            const waiting = swRegistration && swRegistration.waiting;
+            reloadingForUpdate = true;
+            if (waiting) waiting.postMessage({ type: 'SKIP_WAITING' }); // 활성화되면 controllerchange에서 새로고침
+            else location.reload();
+        }
+
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js').then((reg) => {
-                    console.log('PWA ServiceWorker registered with scope:', reg.scope);
+                navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' }).then((reg) => {
+                    swRegistration = reg;
+                    // 기존 버전이 화면을 제어 중일 때 새 버전이 설치 완료되면 안내 (첫 설치는 제외)
+                    if (reg.waiting && navigator.serviceWorker.controller) showUpdateBanner();
+                    reg.addEventListener('updatefound', () => {
+                        const sw = reg.installing;
+                        if (!sw) return;
+                        sw.addEventListener('statechange', () => {
+                            if (sw.state === 'installed' && navigator.serviceWorker.controller) showUpdateBanner();
+                        });
+                    });
                 }).catch((err) => {
                     console.warn('SW registration skipped:', err);
                 });
+            });
+            navigator.serviceWorker.addEventListener('controllerchange', () => {
+                if (reloadingForUpdate) location.reload();
+            });
+            // 앱을 오래 켜 둔 경우: 화면으로 돌아올 때마다 새 버전 확인
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'visible' && swRegistration) swRegistration.update().catch(() => { });
             });
         }
 
@@ -1054,9 +1294,11 @@ function isFirstSunday(d = new Date()) {
             await refreshPhotoCache();
             updateDriveBannerStatus();
             renderHeaderAndTabs();
+            initMiniBar();
             loadSheetData().then(() => {
                 wasComplete = isServiceComplete();
-                syncPhotosFromDrive();
+                checkNewDay();
+                syncPhotosFromDrive().then(retryPendingUploads);
             });
         };
 
