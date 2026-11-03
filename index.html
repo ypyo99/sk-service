@@ -2530,8 +2530,8 @@
     <main class="wrap">
         <div class="search">
             <i class="ph-bold ph-magnifying-glass"></i>
-            <input id="searchInput" type="search" oninput="handleSearch(this.value)" placeholder="작업 검색 (가운, 주보, 명패...)"
-                autocomplete="off" />
+            <input id="searchInput" type="search" name="service_task_query" role="searchbox" oninput="handleSearch(this.value)" placeholder="작업 검색 (가운, 주보, 명패...)"
+                autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
             <button id="clearSearchBtn" class="clear hidden" onclick="clearSearch()" aria-label="검색어 지우기"><i
                     class="ph-bold ph-x"></i></button>
         </div>
@@ -2732,7 +2732,7 @@
     <!-- Gemini API Key 설정 모달 -->
     <div id="geminiKeyModal" class="backdrop center hidden"
         onclick="if (event.target === this) closeGeminiApiKeyModal()">
-        <div class="dialog" style="max-width:360px;">
+        <form class="dialog" style="max-width:360px;" autocomplete="off" onsubmit="event.preventDefault(); saveGeminiApiKey();">
             <div class="big-icon" style="background:#eef2ff; color:var(--accent);"><i class="ph-bold ph-sparkle"></i>
             </div>
             <h3 style="font-size:19px;">Gemini AI 덕담 설정</h3>
@@ -2740,15 +2740,15 @@
                 Key를 입력해 주세요.<br><span style="font-size:12px; color:var(--muted);">(Google AI Studio에서 무료 발급 가능)</span>
             </p>
             <div style="margin:16px 0; text-align:left;">
-                <input type="password" id="geminiApiKeyInput" class="input-text" placeholder="AIzaSy... API 키 붙여넣기"
+                <input type="password" id="geminiApiKeyInput" name="gemini_api_key_field" autocomplete="new-password" class="input-text" placeholder="AIzaSy... API 키 붙여넣기"
                     style="width:100%; box-sizing:border-box;" />
             </div>
             <div class="btn-row">
-                <button class="big-btn ghost" onclick="closeGeminiApiKeyModal()">취소</button>
-                <button class="big-btn primary" onclick="saveGeminiApiKey()"><i
+                <button type="button" class="big-btn ghost" onclick="closeGeminiApiKeyModal()">취소</button>
+                <button type="submit" class="big-btn primary"><i
                         class="ph-bold ph-check"></i>저장하기</button>
             </div>
-        </div>
+        </form>
     </div>
 
     <!-- 초기화 확인 -->
@@ -5041,6 +5041,20 @@ function deleteDrivePhoto(fileId, fileName) {
         }
 
         window.onload = async function () {
+            // 브라우저 자동완성(Autofill)으로 검색창에 이메일/계정이 들어가는 현상 원천 차단
+            const searchInputEl = document.getElementById('searchInput');
+            if (searchInputEl) {
+                searchInputEl.value = '';
+                appState.searchQuery = '';
+            }
+            setTimeout(() => {
+                const sEl = document.getElementById('searchInput');
+                if (sEl && sEl.value && appState.searchQuery === '') {
+                    sEl.value = '';
+                    handleSearch('');
+                }
+            }, 250);
+
             loadState();
             updateDateDisplay();
             checkFirstSundayNotice();
