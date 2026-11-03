@@ -926,7 +926,7 @@ function isFirstSunday(d = new Date()) {
             if (badgeEl) badgeEl.textContent = `${month}월 첫째 주일 알림`;
 
             // 실시간 AI 덕담 생성 실행
-            generateChoirQuotesAI(false);
+            refreshChoirQuotes(false);
 
             openSheet('firstSundayModal');
         }

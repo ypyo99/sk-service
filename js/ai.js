@@ -5,13 +5,13 @@
 const GEMINI_API_KEY_STORAGE = 'GEMINI_API_KEY';
 const DEFAULT_GEMINI_API_KEY = ''; // 하드코딩 배제: 사용자 직접 입력값만 안전하게 사용
 
-// Gemini 공식 모델 목록 (가장 빠르고 즉시 응답하는 초고속 모델 최우선)
+// Gemini 모델 목록 (앞에서부터 시도, 실패 시 다음 모델)
+// ※ 2.0-flash / 1.5-flash / 2.0-flash-lite 는 서비스 종료, 2.5-flash 는 신규 사용 불가 (2026-11 기준)
 const GEMINI_MODELS = [
-    'gemini-2.0-flash',
-    'gemini-1.5-flash',
-    'gemini-2.0-flash-lite',
-    'gemini-2.5-flash',
-    'gemini-3.5-flash-lite'
+    'gemini-3.5-flash-lite',
+    'gemini-3.1-flash-lite',
+    'gemini-3.6-flash',
+    'gemini-2.5-flash-lite'
 ];
 
 // 오프라인 / API 키 미등록 또는 오류 시 순환 표시할 성가대 맞춤 덕담 프리셋 라이브러리
@@ -53,7 +53,9 @@ const CHOIR_PRESET_QUOTES = [
     }
 ];
 
-let currentChoirPresetIndex = 0;
+// 내장 문구도 매번 같은 것부터 시작하지 않도록 무작위 시작
+let currentChoirPresetIndex = Math.floor(Math.random() * CHOIR_PRESET_QUOTES.length);
+let lastGeminiModel = '';
 
 // API 키 가져오기 (오직 localStorage에 사용자가 등록한 값 사용, 공백/따옴표/줄바꿈 완벽 정제)
 function getGeminiApiKey() {
@@ -162,8 +164,8 @@ async function clearGeminiApiKey() {
     syncChoirModalTexts();
 }
 
-// 공통 Gemini REST API 호출 함수 (4.5초 초고속 타임아웃 & 토큰 최적화)
-async function callGeminiApi(prompt, systemInstruction = '', timeoutMs = 4500) {
+// 공통 Gemini REST API 호출 함수 (모델별 타임아웃, JSON 응답 강제)
+async function callGeminiApi(prompt, systemInstruction = '', timeoutMs = 8000) {
     const apiKey = getGeminiApiKey();
     if (!apiKey) {
         const err = new Error('API 키가 설정되지 않았습니다.');
@@ -182,8 +184,10 @@ async function callGeminiApi(prompt, systemInstruction = '', timeoutMs = 4500) {
             const reqBody = {
                 contents: [{ parts: [{ text: prompt }] }],
                 generationConfig: {
-                    temperature: 0.85,
-                    maxOutputTokens: 350
+                    temperature: 1.0,
+                    // 사고(thinking) 토큰이 출력 한도를 먹어 답이 비거나 잘리지 않도록 넉넉히
+                    maxOutputTokens: 1024,
+                    responseMimeType: 'application/json'
                 }
             };
             if (systemInstruction) {
@@ -211,12 +215,15 @@ async function callGeminiApi(prompt, systemInstruction = '', timeoutMs = 4500) {
                 }
                 console.error(`Gemini API [${model}] failed (${res.status}):`, errMessage);
 
-                if (res.status === 400 || res.status === 403) {
-                    // 키가 잘못되었거나 만료되었거나 비활성화됨
+                if (/API[ _]?key/i.test(errMessage) || res.status === 401) {
+                    // 키가 잘못되었거나 만료되었거나 비활성화됨 → 다른 모델도 동일 키이므로 즉시 탈출
                     const err = new Error('API 키가 올바르지 않거나 권한이 없습니다. (Google AI Studio 키 확인)');
                     err.code = 'INVALID_KEY';
                     err.status = res.status;
-                    throw err; // 다른 모델도 동일 키이므로 즉시 탈출
+                    throw err;
+                } else if (res.status === 404 || res.status === 400 || res.status === 403) {
+                    // 종료되었거나 이 키로 쓸 수 없는 모델 → 다음 모델 시도
+                    lastError = new Error(`모델 [${model}] 사용 불가 (${res.status})`);
                 } else if (res.status === 429) {
                     lastError = new Error('호출 한도(Quota)가 초과되었습니다. 잠시 후 다시 시도해 주세요.');
                     lastError.code = 'QUOTA_EXCEEDED';
@@ -227,12 +234,15 @@ async function callGeminiApi(prompt, systemInstruction = '', timeoutMs = 4500) {
             }
 
             const data = await res.json();
-            const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+            // 사고 모델은 parts가 여러 개일 수 있어 thought가 아닌 텍스트만 모음
+            const parts = data?.candidates?.[0]?.content?.parts || [];
+            const rawText = parts.filter(p => p.text && !p.thought).map(p => p.text).join('');
             if (!rawText) {
                 lastError = new Error('AI 응답 내용이 비어 있습니다.');
                 continue;
             }
 
+            lastGeminiModel = model;
             return rawText;
         } catch (netErr) {
             clearTimeout(timer);
@@ -276,78 +286,124 @@ function parseJsonFromText(rawText) {
     }
 }
 
-// 성가대 모달 UI 카드 텍스트 직접 반영 및 반짝임 효과
-function updateChoirModalUi(s1, s2) {
-    const m1 = document.getElementById('modalQuoteS1');
-    const m2 = document.getElementById('modalQuoteS2');
-    const cards = document.querySelectorAll('.choir-card');
+// 성가대 덕담을 화면(성가대 창 + 첫째 주일 팝업)에 표시. source: 'ai' | 'preset'
+function showChoirQuotes(data, source) {
+    const clean = s => `"${String(s).replace(/^"|"$/g, '').trim()}"`;
+    const isAI = source === 'ai';
+    const targets = [['modalQuoteS1', data.service1], ['modalQuoteS2', data.service2],
+                     ['quoteTextService1', data.service1], ['quoteTextService2', data.service2]];
+    targets.forEach(([id, text]) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = clean(text);
+    });
 
-    if (m1) m1.textContent = `"${s1.replace(/^"|"$/g, '').trim()}"`;
-    if (m2) m2.textContent = `"${s2.replace(/^"|"$/g, '').trim()}"`;
+    const badge = document.getElementById('choirModalBadge');
+    if (badge) {
+        badge.innerHTML = isAI
+            ? '<i class="ph-bold ph-sparkle"></i> AI 추천 덕담'
+            : '<i class="ph-bold ph-music-notes"></i> 성가대 격려 덕담 (기본 문구)';
+    }
+    const theme = document.getElementById('quoteThemeText');
+    if (theme) {
+        theme.innerHTML = isAI
+            ? `<i class="ph-bold ph-sparkle"></i> AI 추천 덕담${data.theme ? ' · ' + esc(data.theme) : ''}`
+            : '<i class="ph-bold ph-music-notes"></i> 기본 덕담';
+    }
 
     // 갱신 강조 애니메이션
-    cards.forEach(card => {
+    document.querySelectorAll('.choir-card, .quote-row').forEach(card => {
         card.classList.remove('updated-pulse');
         void card.offsetWidth; // 트리거 리플로우
         card.classList.add('updated-pulse');
     });
 }
 
-// 프리셋 라이브러리에서 특정 순번의 덕담을 모달에 적용
-function applyChoirPresetToUi(index) {
-    const item = CHOIR_PRESET_QUOTES[index % CHOIR_PRESET_QUOTES.length];
-    if (!item) return;
-    updateChoirModalUi(item.service1, item.service2);
+function choirTodayCacheKey() {
+    const now = new Date();
+    return 'gemini_choir_quote_' + `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 }
 
-// 성가대 모달 열기
+function getTodayChoirCache() {
+    try {
+        const key = choirTodayCacheKey();
+        const cached = JSON.parse(sessionStorage.getItem(key) || localStorage.getItem(key));
+        if (cached && cached.service1 && cached.service2) return cached;
+    } catch (e) { }
+    return null;
+}
+
+// 오늘 AI로 만든 덕담이 있으면 그것을, 없으면 내장 문구를 표시
+function syncChoirModalTexts() {
+    const cached = getTodayChoirCache();
+    if (cached) showChoirQuotes(cached, 'ai');
+    else showChoirQuotes(CHOIR_PRESET_QUOTES[currentChoirPresetIndex], 'preset');
+}
+
+function nextChoirPreset() {
+    currentChoirPresetIndex = (currentChoirPresetIndex + 1) % CHOIR_PRESET_QUOTES.length;
+    showChoirQuotes(CHOIR_PRESET_QUOTES[currentChoirPresetIndex], 'preset');
+}
+
+// 로딩 표시 (성가대 창 + 첫째 주일 팝업 공통)
+function setChoirLoading(on) {
+    const toggle = (id, hidden) => {
+        const el = document.getElementById(id);
+        if (el) el.classList.toggle('hidden', hidden);
+    };
+    toggle('choirModalLoadingBox', !on);
+    toggle('choirModalCards', on);
+    toggle('quoteLoadingBox', !on);
+    toggle('quoteQuotesContainer', on);
+    ['choirModalRegenBtn', 'quoteRegenBtn'].forEach(id => {
+        const btn = document.getElementById(id);
+        if (btn) btn.disabled = on;
+    });
+}
+
+// AI 덕담 생성 → 화면 반영. 실패하면 이유를 알리고 다음 내장 문구로 전환
+let isGeneratingChoir = false;
+async function refreshChoirQuotes(forceRefresh) {
+    const hasKey = !!getGeminiApiKey();
+    const noKeyBox = document.getElementById('quoteNoKeyBox');
+    if (noKeyBox) noKeyBox.classList.toggle('hidden', hasKey);
+
+    if (!hasKey) {
+        if (forceRefresh) nextChoirPreset();
+        else syncChoirModalTexts();
+        return;
+    }
+    if (!forceRefresh && getTodayChoirCache()) {
+        syncChoirModalTexts();
+        return;
+    }
+    if (isGeneratingChoir) return;
+
+    isGeneratingChoir = true;
+    setChoirLoading(true);
+    try {
+        const result = await generateChoirQuotesAI(true);
+        showChoirQuotes(result, 'ai');
+        if (forceRefresh) showToast('새로운 AI 덕담이 생성되었습니다! ✨', 'ph-sparkle');
+    } catch (err) {
+        console.error('refreshChoirQuotes failed:', err);
+        showToast(`AI 덕담 생성 실패: ${err?.message || 'AI 통신 실패'} (기본 문구 표시)`, 'ph-warning');
+        nextChoirPreset();
+    } finally {
+        isGeneratingChoir = false;
+        setChoirLoading(false);
+    }
+}
+
+// 성가대 모달 열기: 오늘 덕담(또는 기본 문구)을 바로 보여주고, 오늘 AI 덕담이 없으면 생성
 function openChoirModal() {
     buzz(8);
-    updateApiKeyButtons();
     syncChoirModalTexts();
     openSheet('choirQuoteModal');
-
-    // API 키가 있고 아직 오늘 생성된 캐시가 없다면 백그라운드 AI 생성
-    const apiKey = getGeminiApiKey();
-    if (apiKey) {
-        const now = new Date();
-        const todayKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-        const cacheKey = 'gemini_choir_quote_' + todayKey;
-        if (!sessionStorage.getItem(cacheKey) && !localStorage.getItem(cacheKey)) {
-            generateChoirQuotesAI(false).then(res => {
-                if (res && res.service1 && res.service2) {
-                    updateChoirModalUi(res.service1, res.service2);
-                }
-            }).catch(() => { });
-        }
-    }
+    if (getGeminiApiKey() && !getTodayChoirCache()) refreshChoirQuotes(false);
 }
 
 function closeChoirQuoteModal() {
     closeSheet('choirQuoteModal');
-}
-
-// 성가대 모달 텍스트 동기화 (기본 또는 캐시 로드)
-function syncChoirModalTexts() {
-    const now = new Date();
-    const todayKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-    const cacheKey = 'gemini_choir_quote_' + todayKey;
-    let s1 = '';
-    let s2 = '';
-
-    try {
-        const cached = JSON.parse(sessionStorage.getItem(cacheKey) || localStorage.getItem(cacheKey));
-        if (cached && cached.service1 && cached.service2) {
-            s1 = cached.service1;
-            s2 = cached.service2;
-        }
-    } catch (e) { }
-
-    if (s1 && s2) {
-        updateChoirModalUi(s1, s2);
-    } else {
-        applyChoirPresetToUi(currentChoirPresetIndex);
-    }
 }
 
 function copyChoirQuote(id) {
@@ -370,94 +426,71 @@ function copyTextDirect(text) {
     showToast('덕담 문구가 복사되었습니다! 🎵', 'ph-check');
 }
 
-// 성가대 덕담 '새 추천 (AI)' 버튼 클릭 핸들러
+// 성가대 덕담 '새 추천 (AI)' / 첫째 주일 '새로 생성' 버튼 핸들러
 async function regenerateChoirQuotes() {
     buzz(10);
-    const apiKey = getGeminiApiKey();
-
-    const loadingBox = document.getElementById('choirModalLoadingBox');
-    const cardsBox = document.getElementById('choirModalCards');
-    const regenBtn = document.getElementById('choirModalRegenBtn');
-
-    // 1. API 키가 등록되지 않은 경우: 즉시 다음 추천 프리셋으로 순환하고 안내
-    if (!apiKey) {
-        currentChoirPresetIndex = (currentChoirPresetIndex + 1) % CHOIR_PRESET_QUOTES.length;
-        applyChoirPresetToUi(currentChoirPresetIndex);
-        showToast('Gemini API 키를 등록하시면 AI가 실시간으로 새로운 덕담을 만듭니다.', 'ph-key');
-        setTimeout(() => {
-            openGeminiApiKeyModal();
-        }, 400);
+    if (!getGeminiApiKey()) {
+        nextChoirPreset();
+        showToast('Gemini API 키를 등록하면 AI가 새로운 덕담을 만듭니다. (설정 → Gemini AI 키)', 'ph-key');
         return;
     }
-
-    // 2. API 키가 있는 경우: 로딩 스피너 작동 및 AI 실시간 생성
-    if (loadingBox) loadingBox.classList.remove('hidden');
-    if (cardsBox) cardsBox.classList.add('hidden');
-    if (regenBtn) regenBtn.disabled = true;
-
-    try {
-        const result = await generateChoirQuotesAI(true);
-        if (result && result.service1 && result.service2) {
-            updateChoirModalUi(result.service1, result.service2);
-            showToast('새로운 AI 맞춤 덕담이 생성되었습니다! ✨', 'ph-sparkle');
-        } else {
-            throw new Error('AI 응답 데이터 형식 불일치');
-        }
-    } catch (err) {
-        console.error('regenerateChoirQuotes failed:', err);
-        const errMsg = err?.message || 'AI 통신 실패';
-        showToast(`AI 생성 실패: ${errMsg}`, 'ph-warning');
-
-        // AI 실패 시에도 텍스트가 멈춰있지 않도록 다음 추천 프리셋으로 확실히 전환
-        currentChoirPresetIndex = (currentChoirPresetIndex + 1) % CHOIR_PRESET_QUOTES.length;
-        applyChoirPresetToUi(currentChoirPresetIndex);
-    } finally {
-        if (loadingBox) loadingBox.classList.add('hidden');
-        if (cardsBox) cardsBox.classList.remove('hidden');
-        if (regenBtn) regenBtn.disabled = false;
-    }
+    await refreshChoirQuotes(true);
 }
 
-// Gemini AI를 통한 실시간 맞춤 성가대 덕담 생성
-async function generateChoirQuotesAI(forceRefresh = false) {
-    const apiKey = getGeminiApiKey();
-    if (!apiKey) return null;
+// 최근 생성한 덕담 (같은 문장 반복을 피하도록 프롬프트에 전달)
+const CHOIR_HISTORY_KEY = 'gemini_choir_quote_history';
+function getChoirHistory() {
+    try { return JSON.parse(localStorage.getItem(CHOIR_HISTORY_KEY) || '[]'); } catch (e) { return []; }
+}
+function pushChoirHistory(data) {
+    try {
+        const list = getChoirHistory();
+        list.push(data.service1, data.service2);
+        localStorage.setItem(CHOIR_HISTORY_KEY, JSON.stringify(list.slice(-16)));
+    } catch (e) { }
+}
 
-    const now = new Date();
-    const todayKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-    const cacheKey = 'gemini_choir_quote_' + todayKey;
+// Gemini AI를 통한 실시간 맞춤 성가대 덕담 생성 (실패 시 throw)
+async function generateChoirQuotesAI(forceRefresh = false) {
+    if (!getGeminiApiKey()) {
+        const err = new Error('API 키가 설정되지 않았습니다.');
+        err.code = 'NO_KEY';
+        throw err;
+    }
 
     // 이미 오늘 생성된 덕담이 있고 강제 새로고침이 아닌 경우 캐시 반환
     if (!forceRefresh) {
-        try {
-            const cached = JSON.parse(sessionStorage.getItem(cacheKey) || localStorage.getItem(cacheKey));
-            if (cached && cached.service1 && cached.service2) {
-                return cached;
-            }
-        } catch (e) { }
+        const cached = getTodayChoirCache();
+        if (cached) return cached;
     }
 
     // 매번 다른 각도와 주제로 신선한 덕담을 유도하는 무작위 힌트 풀
     const ANGLES_1 = [
         "이른 아침 피로를 잊게 하는 환한 미소와 정성 어린 찬양",
         "새벽 첫 시간을 아름다운 화음으로 깨워준 고마움",
-        "주일 아침 가장 먼저 예배당을 거룩한 찬양으로 채워준 수고",
+        "주일 아침 가장 먼저 예배당을 찬양으로 채워준 수고",
         "지휘자, 반주자, 대원들이 하나 된 따뜻한 하모니에 대한 감사",
-        "아침 일찍 준비된 찬양이 성도들의 마음에 큰 힘이 되었다는 칭찬"
+        "아침 일찍 준비된 찬양이 성도들의 마음에 큰 힘이 되었다는 칭찬",
+        "추운 날·더운 날에도 빠지지 않고 자리를 지켜준 성실함",
+        "한 목소리로 맞춘 화음이 듣기 좋았다는 솔직한 칭찬"
     ];
 
     const ANGLES_2 = [
-        "온 성도의 마음에 큰 감동과 평안을 선물해 준 찬양의 은혜",
-        "한 주간 열심히 기도하고 준비한 정성이 가슴에 와닿았다는 감사",
-        "풍성하고 웅장한 화음으로 예배를 더욱 거룩하게 빛내준 수고",
-        "성도들에게 한 주간을 살아갈 큰 용기와 소망을 안겨준 은혜로운 찬양",
-        "마음을 다해 부른 찬양으로 하나님께 영광 돌린 대원들에 대한 칭찬"
+        "온 성도의 마음에 큰 감동과 평안을 선물해 준 찬양",
+        "한 주간 열심히 연습하고 준비한 정성이 느껴졌다는 감사",
+        "풍성한 화음으로 예배를 더욱 밝게 빛내준 수고",
+        "성도들에게 한 주를 살아갈 힘을 안겨준 찬양",
+        "마음을 다해 부른 찬양으로 하나님께 영광 돌린 대원들 칭찬",
+        "찬양을 듣고 저절로 미소가 지어졌다는 따뜻한 고백",
+        "바쁜 일상 속에서도 연습 시간을 내어준 정성에 대한 고마움"
     ];
 
+    const now = new Date();
     const angle1 = ANGLES_1[Math.floor(Math.random() * ANGLES_1.length)];
     const angle2 = ANGLES_2[Math.floor(Math.random() * ANGLES_2.length)];
-    const randomNonce = Math.floor(Math.random() * 10000);
+    const randomNonce = Math.floor(Math.random() * 100000);
     const month = now.getMonth() + 1;
+    const avoid = [...getChoirHistory(), ...CHOIR_PRESET_QUOTES.flatMap(p => [p.service1, p.service2])];
 
     const prompt = `오늘 날짜는 ${now.getFullYear()}년 ${month}월입니다. 교회 예배부 사역자가 주일 예배 성가대원들에게 건넬 아주 쉽고 따뜻한 1줄 덕담(격려 문구)을 작성해 주세요. (고유번호: ${randomNonce})
 
@@ -470,6 +503,8 @@ async function generateChoirQuotesAI(forceRefresh = false) {
 2. 초등학생도 편하게 알아들을 수 있을 만큼 쉽고 다정한 일상 단어만 쓰세요.
 3. 어미는 정중하고 부드러운 존댓말(~감사해요, ~고맙습니다, ~힘이 돼요 등)로 작성하세요.
 4. 각 문장은 20~28자 내외로 아주 짧고 산뜻하게 작성하세요. (따옴표 제외)
+5. 아래 문장들과 표현·시작 단어가 겹치지 않는 새로운 문장으로 쓰세요:
+${avoid.map(s => '- ' + s).join('\n')}
 
 반드시 아래 JSON 형식으로만 응답해 주세요:
 {
@@ -483,9 +518,11 @@ async function generateChoirQuotesAI(forceRefresh = false) {
 
     if (resultData && resultData.service1 && resultData.service2) {
         try {
+            const cacheKey = choirTodayCacheKey();
             localStorage.setItem(cacheKey, JSON.stringify(resultData));
             sessionStorage.setItem(cacheKey, JSON.stringify(resultData));
         } catch (e) { }
+        pushChoirHistory(resultData);
         return resultData;
     }
 
