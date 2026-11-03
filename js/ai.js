@@ -164,8 +164,8 @@ async function clearGeminiApiKey() {
     syncChoirModalTexts();
 }
 
-// 공통 Gemini REST API 호출 함수 (모델별 타임아웃, JSON 응답 강제)
-async function callGeminiApi(prompt, systemInstruction = '', timeoutMs = 8000) {
+// 공통 Gemini REST API 호출 함수 (모델별 타임아웃, 높은 창의성 온도, JSON 응답 강제)
+async function callGeminiApi(prompt, systemInstruction = '', timeoutMs = 8000, temperature = 1.15) {
     const apiKey = getGeminiApiKey();
     if (!apiKey) {
         const err = new Error('API 키가 설정되지 않았습니다.');
@@ -184,7 +184,7 @@ async function callGeminiApi(prompt, systemInstruction = '', timeoutMs = 8000) {
             const reqBody = {
                 contents: [{ parts: [{ text: prompt }] }],
                 generationConfig: {
-                    temperature: 1.0,
+                    temperature: temperature,
                     // 사고(thinking) 토큰이 출력 한도를 먹어 답이 비거나 잘리지 않도록 넉넉히
                     maxOutputTokens: 1024,
                     responseMimeType: 'application/json'
@@ -437,7 +437,7 @@ async function regenerateChoirQuotes() {
     await refreshChoirQuotes(true);
 }
 
-// 최근 생성한 덕담 (같은 문장 반복을 피하도록 프롬프트에 전달)
+// 최근 생성한 덕담 히스토리 (직전 문장과의 중복 방지용)
 const CHOIR_HISTORY_KEY = 'gemini_choir_quote_history';
 function getChoirHistory() {
     try { return JSON.parse(localStorage.getItem(CHOIR_HISTORY_KEY) || '[]'); } catch (e) { return []; }
@@ -445,12 +445,13 @@ function getChoirHistory() {
 function pushChoirHistory(data) {
     try {
         const list = getChoirHistory();
-        list.push(data.service1, data.service2);
-        localStorage.setItem(CHOIR_HISTORY_KEY, JSON.stringify(list.slice(-16)));
+        if (data.service1) list.push(data.service1.trim());
+        if (data.service2) list.push(data.service2.trim());
+        localStorage.setItem(CHOIR_HISTORY_KEY, JSON.stringify(list.slice(-12)));
     } catch (e) { }
 }
 
-// Gemini AI를 통한 실시간 맞춤 성가대 덕담 생성 (실패 시 throw)
+// Gemini AI를 통한 실시간 맞춤 성가대 덕담 생성 (다양성 극대화, 중복 방지)
 async function generateChoirQuotesAI(forceRefresh = false) {
     if (!getGeminiApiKey()) {
         const err = new Error('API 키가 설정되지 않았습니다.');
@@ -464,47 +465,67 @@ async function generateChoirQuotesAI(forceRefresh = false) {
         if (cached) return cached;
     }
 
-    // 매번 다른 각도와 주제로 신선한 덕담을 유도하는 무작위 힌트 풀
+    // 매번 다른 각도와 주제로 신선한 덕담을 유도하는 10가지 이상의 다채로운 힌트 풀
     const ANGLES_1 = [
-        "이른 아침 피로를 잊게 하는 환한 미소와 정성 어린 찬양",
-        "새벽 첫 시간을 아름다운 화음으로 깨워준 고마움",
-        "주일 아침 가장 먼저 예배당을 찬양으로 채워준 수고",
-        "지휘자, 반주자, 대원들이 하나 된 따뜻한 하모니에 대한 감사",
-        "아침 일찍 준비된 찬양이 성도들의 마음에 큰 힘이 되었다는 칭찬",
-        "추운 날·더운 날에도 빠지지 않고 자리를 지켜준 성실함",
-        "한 목소리로 맞춘 화음이 듣기 좋았다는 솔직한 칭찬"
+        "이른 아침 피로를 단번에 잊게 해 준 찬양대의 밝고 환한 미소",
+        "새벽 공기를 뚫고 가장 먼저 예배당을 거룩한 찬양으로 채워준 헌신",
+        "주일 아침 첫 예배를 찾아온 성도들의 굳은 마음을 따뜻하게 녹여준 화음",
+        "주일 첫 시간을 하나님께 온전히 올려드린 거룩한 첫 열매의 감동",
+        "지휘자의 섬세한 손짓과 반주자의 선율, 대원들의 숨소리가 하나 된 아름다움",
+        "아침 일찍 예배를 돕는 모든 봉사자들에게 큰 힘과 위로가 되어준 목소리",
+        "추위와 이른 시간의 수고를 기쁨과 감사로 바꿔준 감동적인 찬양",
+        "예배당 문을 열자마자 울려 퍼진 찬양 소리에 큰 평안과 감동을 받은 순간",
+        "대원들의 맑고 고운 눈망울에서 느껴진 순수한 찬양의 열정",
+        "바쁜 주말에도 아침 첫 시간을 구별하여 달려와 준 거룩한 발걸음"
     ];
 
     const ANGLES_2 = [
-        "온 성도의 마음에 큰 감동과 평안을 선물해 준 찬양",
-        "한 주간 열심히 연습하고 준비한 정성이 느껴졌다는 감사",
-        "풍성한 화음으로 예배를 더욱 밝게 빛내준 수고",
-        "성도들에게 한 주를 살아갈 힘을 안겨준 찬양",
-        "마음을 다해 부른 찬양으로 하나님께 영광 돌린 대원들 칭찬",
-        "찬양을 듣고 저절로 미소가 지어졌다는 따뜻한 고백",
-        "바쁜 일상 속에서도 연습 시간을 내어준 정성에 대한 고마움"
+        "온 성도의 마음에 큰 감동과 깊은 평안을 선물해 준 거룩한 찬양",
+        "한 주간 삶의 무게와 피로를 씻은 듯 내려놓게 해 준 은혜로운 하모니",
+        "가사 한 줄 한 줄이 마음에 깊이 새겨져 큰 위로와 소망이 된 찬양",
+        "한 주간 열심히 기도하며 준비한 정성이 가슴 깊이 와닿았음에 대한 감사",
+        "풍성하고 웅장한 화음으로 예배를 더욱 거룩하고 은혜롭게 빛내준 수고",
+        "듣는 온 성도들의 얼굴에 절로 감사와 행복한 미소가 번지게 한 감동",
+        "한 주를 다시 살아갈 하늘의 새 힘과 용기를 듬뿍 안겨준 찬양",
+        "온 마음과 정성을 다해 주님께 영광 돌린 대원들의 귀한 헌신 칭찬",
+        "마치 하늘 문이 활짝 열린 듯 가슴 벅찬 은혜를 선물해 준 화음",
+        "성가대의 찬양이 성도들의 기도와 마음에 날개를 달아준 순간"
+    ];
+
+    const ENDINGS = [
+        "다정하고 감동적인 고백 (~고마워요, ~힘이 돼요, ~정말 감사해요)",
+        "자랑스럽고 든든한 칭찬 (~참 든든해요, ~최고였어요, ~자랑스러워요)",
+        "마음이 뭉클해지는 축복 (~큰 은혜를 받았어요, ~마음이 따스해져요, ~행복해져요)"
     ];
 
     const now = new Date();
     const angle1 = ANGLES_1[Math.floor(Math.random() * ANGLES_1.length)];
     const angle2 = ANGLES_2[Math.floor(Math.random() * ANGLES_2.length)];
-    const randomNonce = Math.floor(Math.random() * 100000);
+    const ending = ENDINGS[Math.floor(Math.random() * ENDINGS.length)];
+    const randomNonce = Math.floor(Math.random() * 1000000);
     const month = now.getMonth() + 1;
-    const avoid = [...getChoirHistory(), ...CHOIR_PRESET_QUOTES.flatMap(p => [p.service1, p.service2])];
 
-    const prompt = `오늘 날짜는 ${now.getFullYear()}년 ${month}월입니다. 교회 예배부 사역자가 주일 예배 성가대원들에게 건넬 아주 쉽고 따뜻한 1줄 덕담(격려 문구)을 작성해 주세요. (고유번호: ${randomNonce})
+    // 최근 나왔던 문장 최대 4개만 추출하여 해당 비유/표현 반복 차단
+    const recentPhrases = getChoirHistory().slice(-4);
+    let avoidNotice = '';
+    if (recentPhrases.length > 0) {
+        avoidNotice = `\n[주의: 직전에 이미 나왔던 문구이므로 아래 문구와 비유나 첫 단어가 겹치지 않는 완전히 새로운 표현으로 작성하세요]:\n` +
+            recentPhrases.map(p => `- "${p}"`).join('\n') + '\n';
+    }
+
+    const prompt = `오늘 날짜는 ${now.getFullYear()}년 ${month}월입니다. 교회 예배부 사역자가 주일 예배 성가대원들에게 건넬 아주 쉽고 따뜻한 1줄 덕담(격려 문구)을 작성해 주세요. (고유코드: ${randomNonce})
 
 [격려 초점]
 - 1부 성가대: ${angle1}
 - 2부 성가대: ${angle2}
-
+- 분위기/어조: ${ending}
+${avoidNotice}
 [작성 지침 - 절대 준수]
 1. 어려운 한자어나 거창한 문어체(예: '풍성케 하심', '화답하여', '심령', '헌신' 등)는 절대 쓰지 마세요.
 2. 초등학생도 편하게 알아들을 수 있을 만큼 쉽고 다정한 일상 단어만 쓰세요.
 3. 어미는 정중하고 부드러운 존댓말(~감사해요, ~고맙습니다, ~힘이 돼요 등)로 작성하세요.
 4. 각 문장은 20~28자 내외로 아주 짧고 산뜻하게 작성하세요. (따옴표 제외)
-5. 아래 문장들과 표현·시작 단어가 겹치지 않는 새로운 문장으로 쓰세요:
-${avoid.map(s => '- ' + s).join('\n')}
+5. 기존에 흔히 쓰이던 뻔한 문장 대신, 참신하고 생생한 감동 표현을 담아주세요.
 
 반드시 아래 JSON 형식으로만 응답해 주세요:
 {
@@ -513,7 +534,8 @@ ${avoid.map(s => '- ' + s).join('\n')}
   "service2": "2부 덕담 문구"
 }`;
 
-    const rawText = await callGeminiApi(prompt);
+    // 창의성 온도 1.15로 높여 매번 완전히 참신한 문장 유도
+    const rawText = await callGeminiApi(prompt, '', 8000, 1.15);
     const resultData = parseJsonFromText(rawText);
 
     if (resultData && resultData.service1 && resultData.service2) {
@@ -639,25 +661,51 @@ async function fetchBibleVerseAI(forceRefresh = false) {
     if (tagsEl) tagsEl.innerHTML = '';
     if (prayerEl) prayerEl.innerHTML = '<span style="color:var(--muted); font-size:13px;">말씀과 함께 나눌 축복 기도문을 준비하고 있습니다...</span>';
 
+    const VERSE_HISTORY_KEY = 'gemini_verse_recent_refs';
+    function getVerseRecentRefs() {
+        try { return JSON.parse(localStorage.getItem(VERSE_HISTORY_KEY) || '[]'); } catch (e) { return []; }
+    }
+    function pushVerseRef(ref) {
+        try {
+            const list = getVerseRecentRefs();
+            if (ref) list.push(ref.trim());
+            localStorage.setItem(VERSE_HISTORY_KEY, JSON.stringify(list.slice(-8)));
+        } catch (e) { }
+    }
+
     const VERSE_ANGLES = [
         "주일 아침 일찍 나와 보이지 않는 곳에서 묵묵히 헌신하는 예배위원의 봉사를 크게 칭찬하고 기억하시는 하나님의 은혜",
         "지치지 않고 기쁨으로 섬길 때 하나님께서 풍성한 상급과 평안을 예비해 두셨다는 격려와 축복",
         "성도들을 온 마음과 미소로 맞이하며 예배를 돕는 섬김의 손길에 부어주시는 하늘의 복",
-        "하나님의 집에서 한 날 문지기로 섬김이 세상의 천 날보다 낫다는 감사와 거룩한 자부심",
-        "사랑과 봉사로 하나 되어 주님의 몸 된 교회를 든든히 세워가는 거룩한 동역자들의 수고 칭찬"
+        "하나님의 집에서 한 날 문지기로 섬김이 세상의 천 날보다 낫다는 감사와 거룩한 자부심 (시편 84편)",
+        "사랑과 봉사로 하나 되어 주님의 몸 된 교회를 든든히 세워가는 거룩한 동역자들의 수고 칭찬",
+        "선을 행하되 낙심하지 아니하면 때가 이르매 거두리라는 소망과 위로 (갈라디아서 6장)",
+        "무슨 일을 하든지 마음을 다하여 주께 하듯 하고 사람에게 하듯 하지 말라는 영적 권면 (골로새서 3장)",
+        "착하고 충성된 종아 네가 적은 일에 충성하였으매 내가 많은 것을 네게 맡기리니 (마태복음 25장)",
+        "하나님은 불의하지 아니하사 너희 행위와 그의 이름을 위하여 나타낸 사랑을 잊지 않으신다는 위로 (히브리서 6장)",
+        "각각 은사를 받은 대로 하나님의 여러 가지 은혜를 맡은 선한 청지기 같이 봉사하라 (베드로전서 4장)",
+        "좋은 소식을 전하며 평화를 공포하며 복된 좋은 소식을 가져오는 자의 발이 어찌 그리 아름다운가 (이사야 52장)",
+        "너희 수고가 주 안에서 헛되지 않은 줄 앎이라 흔들리지 말고 항상 주의 일에 더욱 힘쓰는 자들이 되라 (고전 15장)"
     ];
     const pickedAngle = VERSE_ANGLES[Math.floor(Math.random() * VERSE_ANGLES.length)];
-    const randomNonce = Math.floor(Math.random() * 10000);
+    const randomNonce = Math.floor(Math.random() * 1000000);
+    const recentRefs = getVerseRecentRefs();
+    let avoidVerseNotice = '';
+    if (recentRefs.length > 0) {
+        avoidVerseNotice = `\n[주의: 최근에 이미 추천된 구절이므로 아래 구절은 피하고 성경 66권 중 아직 나오지 않은 다른 감동적인 구절을 추천하세요]:\n` +
+            recentRefs.map(r => `- ${r}`).join('\n') + '\n';
+    }
 
     // 프롬프트 압축 (토큰 처리 속도 및 생성 시간 극대화)
     const prompt = `교회 주일 아침 8시 30분 예배위원(안내/봉사/기도/방송실)들의 '봉사, 헌신, 수고'를 크게 칭찬하고 격려하는 성경구절 1개와 짧은 축복 기도문을 작성하세요. (코드:${randomNonce})
 초점: ${pickedAngle}
-
+${avoidVerseNotice}
 [규칙]
 1. text: 실제 개역개정 성경 본문 그대로 (봉사와 수고 칭찬 격려)
-2. ref: 정확한 책 이름과 장절
+2. ref: 정확한 책 이름과 장절 (예: 시편 84편 10절)
 3. tags: 핵심 태그 2개 배열
 4. prayer: 예배위원을 축복하는 1줄 기도문 (~하옵소서)
+5. 다양한 성경(시편, 잠언, 이사야, 복음서, 바울서신, 일반서신 등)에서 골고루 추천하세요.
 
 반드시 아래 JSON 형식으로만 응답:
 {
@@ -668,7 +716,7 @@ async function fetchBibleVerseAI(forceRefresh = false) {
 }`;
 
     try {
-        const rawText = await callGeminiApi(prompt);
+        const rawText = await callGeminiApi(prompt, '', 8000, 1.15);
         const resultData = parseJsonFromText(rawText);
 
         if (resultData && resultData.text && resultData.ref) {
@@ -677,6 +725,7 @@ async function fetchBibleVerseAI(forceRefresh = false) {
                 sessionStorage.setItem(cacheKey, JSON.stringify(resultData));
             } catch (e) { }
 
+            pushVerseRef(resultData.ref);
             renderCurrentVerseDisplay(resultData, true);
             showToast('AI가 봉사와 헌신을 격려하는 새 성경구절을 추천했습니다! ✨', 'ph-sparkle');
         } else {
