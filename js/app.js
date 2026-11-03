@@ -779,7 +779,9 @@ function esc(s) {
 
         // 출석체크 완료 및 [날짜-x부예배] 파일 생성 & 드라이브/기기 저장
         async function markAttendanceTaskDone() {
-            const srv = appState.currentService;
+            // 파일은 계수기에서 선택한 탭 기준으로 만들어지므로, 체크도 같은 예배에 표시
+            const attToSrv = { att1: 'service1', att2: 'service2', att3: 'afternoon', attDawn: 'dawn' };
+            const srv = attToSrv[appState.currentAttTab] || appState.currentService;
             if (!appState.checkedByService[srv]) appState.checkedByService[srv] = {};
             const attItem = SPREADSHEET_ITEMS.find(i => i.actionType === 'attendanceModal');
             if (attItem) appState.checkedByService[srv][attItem.id] = true;
@@ -805,7 +807,13 @@ function esc(s) {
             }
 
             closeSheet('attendanceModal');
-            afterCheckChange();
+            if (srv !== appState.currentService) {
+                saveState();
+                renderAll();
+                showToast(`${SERVICE_NAMES[srv]}의 출석체크 항목을 완료로 표시했습니다.`, 'ph-check-circle');
+            } else {
+                afterCheckChange();
+            }
             buzz([20, 50, 20]);
         }
         // ==========================================
@@ -819,6 +827,10 @@ function isFirstSunday(d = new Date()) {
             const urlKey = urlParams.get('setGeminiKey');
             if (urlKey) {
                 localStorage.setItem(GEMINI_API_KEY_STORAGE, urlKey.trim());
+                // 키가 방문 기록·북마크·공유 링크에 남지 않도록 주소창에서 즉시 제거
+                urlParams.delete('setGeminiKey');
+                const qs = urlParams.toString();
+                history.replaceState(null, '', location.pathname + (qs ? '?' + qs : '') + location.hash);
                 showToast('Gemini API 키가 성공적으로 등록되었습니다!', 'ph-check-circle');
             }
             const isTest = urlParams.get('testFirstSunday') === '1' || !!urlKey;

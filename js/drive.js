@@ -4,7 +4,8 @@
 
 // 사진 첨부 및 구글 드라이브 연동 모듈
         // ==========================================
-        const DRIVE_WEBHOOK_KEY = 'CHURCH_WORSHIP_DRIVE_WEBHOOK_URL';
+        // V2: 기기에 남아 있는 구버전 URL(이전 키)은 무시하고, 이 키로 새로 저장한 값만 기본값보다 우선 적용
+        const DRIVE_WEBHOOK_KEY = 'CHURCH_WORSHIP_DRIVE_WEBHOOK_URL_V2';
         const PHOTO_DB_NAME = 'ChurchWorshipPhotoDB';
         const PHOTO_STORE_NAME = 'photos';
         const PHOTO_DB_VERSION = 1;
@@ -722,8 +723,7 @@
 
         // 구글 드라이브 설정 모달
         function openDriveConfigModal() {
-            const savedUrl = localStorage.getItem(DRIVE_WEBHOOK_KEY) || DEFAULT_DRIVE_WEBHOOK_URL;
-            document.getElementById('driveWebhookInput').value = savedUrl;
+            document.getElementById('driveWebhookInput').value = getDriveWebhookUrl();
             openSheet('driveConfigModal');
         }
 
@@ -734,9 +734,11 @@
 
         function saveDriveWebhookUrl() {
             const val = document.getElementById('driveWebhookInput').value.trim();
-            localStorage.setItem(DRIVE_WEBHOOK_KEY, val);
+            // 빈 값이거나 기본 URL과 같으면 저장값을 지워 내장 기본 URL을 따르게 함
+            if (!val || val === DEFAULT_DRIVE_WEBHOOK_URL) localStorage.removeItem(DRIVE_WEBHOOK_KEY);
+            else localStorage.setItem(DRIVE_WEBHOOK_KEY, val);
             updateDriveBannerStatus();
-            showToast('구글 드라이브 설정이 저장되었습니다!', 'ph-check-circle');
+            showToast(val ? '구글 드라이브 설정이 저장되었습니다!' : '기본 드라이브 설정으로 되돌렸습니다.', 'ph-check-circle');
             closeDriveConfigModal();
         }
 

@@ -17,8 +17,10 @@
         const DEFAULT_DRIVE_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbzWSplfEXg5yn2GdXxhRSx7hF0Yns_UJJoN4h8mfY_dO3dzLHWAuZjajamGHohcwYfOEQ/exec';
 
         function getDriveWebhookUrl() {
-            // 앱에 내장된 기본 웹 앱 URL을 항상 최우선으로 적용 (기기별 로컬스토리지 잔여 구버전 URL 무시)
-            return (DEFAULT_DRIVE_WEBHOOK_URL || localStorage.getItem(DRIVE_WEBHOOK_KEY) || '').trim();
+            // 설정 화면에서 저장한 URL 우선, 없으면 앱에 내장된 기본 웹 앱 URL 사용
+            let saved = '';
+            try { saved = localStorage.getItem(DRIVE_WEBHOOK_KEY) || ''; } catch (e) { }
+            return (saved.trim() || DEFAULT_DRIVE_WEBHOOK_URL || '').trim();
         }
 
         // 순서코드별 색상 (데이터가 아닌 표시용 설정)
